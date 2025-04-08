@@ -1,0 +1,60 @@
+
+---
+
+### **Storyboard du projet Java - Application Shopping**
+
+Ce storyboard représente la navigation logique entre les différents écrans de l'application de shopping développée en Java. Il s'appuie sur une architecture MVC et respecte les fonctionnalités détaillées dans le cahier des charges.
+
+---
+
+### **1. Accueil principal**
+
+L'application s'ouvre sur une **page d'accueil principale** où l'utilisateur choisit s'il se connecte en tant que **Client** ou **Administrateur**.
+
+- → **Connexion Client**  
+- → **Connexion Admin**
+
+---
+
+### **2. Connexion**
+
+Selon le choix effectué sur la page d'accueil :  
+- Le **client** accède à un formulaire d'identification (login + mot de passe)  
+- L'**administrateur** accède à son propre espace d'identification  
+
+En cas de connexion réussie :  
+- Le client est redirigé vers l'**Accueil Client**  
+- L'administrateur est redirigé vers l'**Accueil Admin**
+
+---
+
+### **3. Accueil Client**
+
+Depuis l'accueil client, l'utilisateur peut :  
+- Accéder au **catalogue** des articles disponibles  
+- Accéder à son **historique de commandes**
+
+**Navigation client :**  
+- Le **catalogue** permet de parcourir les articles, les filtrer par marque et en sélectionner pour achat  
+- Le **panier** affiche les articles sélectionnés, modifiables en quantité  
+- La **facturation** calcule le total avec les remises potentielles
+
+---
+
+### **4. Accueil Admin**
+
+Depuis l'accueil admin, l'utilisateur peut :  
+- Gérer les **articles** (ajout, suppression, mise à jour)  
+- Gérer les **réductions** (offres en vrac, promotions)  
+- Accéder aux **statistiques et reporting** (graphiques de ventes, articles populaires...)
+
+---
+
+### **Remarques**
+
+- Chaque flèche du storyboard correspond à une navigation évidente via boutons ou menus  
+- Le storyboard sépare clairement le parcours **client** et le parcours **admin**, tout en partant d'une entrée commune (l’accueil principal)
+
+Ce storyboard permet de poser les bases du design de l'application et prépare la réalisation des **wireframes** de chaque interface.
+
+---

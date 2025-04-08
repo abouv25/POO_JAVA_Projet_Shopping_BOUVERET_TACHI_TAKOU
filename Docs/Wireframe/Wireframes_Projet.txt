@@ -1,0 +1,58 @@
+**Descriptions des Wireframes - Application Shopping (Projet Java)**
+
+---
+
+### 1. Connexion Client
+Cet écran présente un formulaire de connexion pour les clients. Il comporte :
+- Un champ pour l'adresse email
+- Un champ pour le mot de passe
+- Un bouton "Se connecter"
+- Un lien "Créer un compte" redirigeant vers l'inscription
+
+---
+
+### 2. Catalogue des articles
+Le catalogue affiche une liste d'articles filtrables par marque. Il inclut :
+- Une zone de recherche
+- Un filtre par marque
+- Une zone centrale affichant la liste des articles disponibles
+- Un bouton "Ajouter au panier" pour chaque article
+
+---
+
+### 3. Panier
+Cette page affiche les articles ajoutés par le client avec leurs quantités. Elle comporte :
+- Une liste d'articles sélectionnés
+- Des options de modification des quantités
+- Un bouton "Mettre à jour"
+- Un bouton "Passer à la caisse"
+
+---
+
+### 4. Facturation
+La page de facturation récapitule la commande et applique les remises. Elle inclut :
+- Un résumé des articles commandés
+- Une section indiquant les remises appliquées
+- Un bouton "Payer"
+
+---
+
+### 5. Gestion des articles (Admin)
+Cette interface permet à l'administrateur de gérer le catalogue. Elle présente :
+- Une liste des articles
+- Trois boutons : "Ajouter", "Modifier" et "Supprimer" des articles
+
+---
+
+### 6. Gestion des réductions (Admin)
+Cette page est dédiée à la gestion des remises promotionnelles. Elle comprend :
+- Une liste des réductions existantes
+- Des boutons pour "Ajouter", "Modifier" et "Supprimer" une réduction
+
+---
+
+### 7. Statistiques / Reporting (Admin)
+Cette interface permet à l'administrateur de consulter des données graphiques :
+- Un graphique de ventes (histogramme ou camembert)
+- Un filtre temporel (par période)
+- Un bouton pour exporter un rapport de ventes
