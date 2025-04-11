@@ -2,41 +2,56 @@ package modele;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 /**
- * Classe représentant une facture générée à partir d’un panier.
+ * Classe représentant une facture générée à partir d’une liste de lignes.
  */
 public class Facture {
+    private int id;
     private Utilisateur client;
-    private Panier panier;
+    private List<LignePanier> lignes;
     private LocalDate date;
-    private double remisePourcent; // par exemple 10% pour client fidèle
+    private double remisePourcent;
+    private double montantTotal;
 
-    public Facture(Utilisateur client, Panier panier) {
+    public Facture(Utilisateur client, List<LignePanier> lignes) {
         this.client = client;
-        this.panier = panier;
+        this.lignes = lignes;
         this.date = LocalDate.now();
         this.remisePourcent = client.isClientFidele() ? 10.0 : 0.0;
+        this.montantTotal = calculerTotal();
     }
 
-    // Calcul du total avec remise
+    public Facture(int id, Utilisateur client, LocalDate date, double montantTotal, double remisePourcent) {
+        this.id = id;
+        this.client = client;
+        this.date = date;
+        this.montantTotal = montantTotal;
+        this.remisePourcent = remisePourcent;
+        this.lignes = null; // utilisé uniquement côté affichage
+    }
+
     public double calculerTotal() {
-        double totalBrut = panier.calculerTotal();
+        if (lignes == null) return montantTotal;
+        double totalBrut = lignes.stream()
+                .mapToDouble(l -> l.getPrix() * l.getQuantite())
+                .sum();
         double remise = totalBrut * (remisePourcent / 100.0);
         return totalBrut - remise;
     }
 
-    // Getter de la date formatée
-    public String getDateFormatee() {
-        return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    // Getters / Setters
+    public int getId() {
+        return id;
     }
 
     public Utilisateur getClient() {
         return client;
     }
 
-    public Panier getPanier() {
-        return panier;
+    public List<LignePanier> getLignes() {
+        return lignes;
     }
 
     public double getRemisePourcent() {
@@ -45,5 +60,21 @@ public class Facture {
 
     public LocalDate getDate() {
         return date;
+    }
+
+    public double getMontantTotal() {
+        return montantTotal;
+    }
+
+    public String getDateFormatee() {
+        return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
+
+    public void setMontantTotal(double montantTotal) {
+        this.montantTotal = montantTotal;
     }
 }
