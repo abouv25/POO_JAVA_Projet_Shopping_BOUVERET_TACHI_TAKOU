@@ -2,76 +2,92 @@ package modele;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Classe représentant une facture générée à partir d’une liste de lignes.
- */
 public class Facture {
     private int id;
     private Utilisateur client;
     private List<LignePanier> lignes;
     private LocalDate date;
-    private double remisePourcent;
     private double montantTotal;
+    private double remisePourcent;  // Remise en pourcentage
 
-    public Facture(Utilisateur client, List<LignePanier> lignes) {
-        this.client = client;
-        this.lignes = lignes;
-        this.date = LocalDate.now();
-        this.remisePourcent = client.isClientFidele() ? 10.0 : 0.0;
-        this.montantTotal = calculerTotal();
-    }
-
-    public Facture(int id, Utilisateur client, LocalDate date, double montantTotal, double remisePourcent) {
+    // Constructeur pour récupérer une facture de la base de données
+    public Facture(int id, Utilisateur client, LocalDate date, double montantTotal) {
         this.id = id;
         this.client = client;
         this.date = date;
         this.montantTotal = montantTotal;
-        this.remisePourcent = remisePourcent;
-        this.lignes = null; // utilisé uniquement côté affichage
+        this.lignes = new ArrayList<>();
     }
 
+    // Constructeur pour créer une nouvelle facture
+    public Facture(Utilisateur client, List<LignePanier> lignes) {
+        this.client = client;
+        this.lignes = new ArrayList<>(lignes);
+        this.date = LocalDate.now();
+        this.montantTotal = calculerTotal();
+    }
+
+    // Calcul du montant total de la facture
     public double calculerTotal() {
-        if (lignes == null) return montantTotal;
-        double totalBrut = lignes.stream()
+        return lignes.stream()
                 .mapToDouble(l -> l.getPrix() * l.getQuantite())
                 .sum();
-        double remise = totalBrut * (remisePourcent / 100.0);
-        return totalBrut - remise;
     }
 
-    // Getters / Setters
+    // Méthode pour obtenir la date formatée
+    public String getDateFormatee() {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        return this.date.format(formatter);
+    }
+
+    // Getter et Setter pour la remise en pourcentage
+    public double getRemisePourcent() {
+        return remisePourcent;
+    }
+
+    public void setRemisePourcent(double remisePourcent) {
+        this.remisePourcent = remisePourcent;
+    }
+
+    // Getters et setters
     public int getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public Utilisateur getClient() {
         return client;
     }
 
-    public List<LignePanier> getLignes() {
-        return lignes;
+    public void setClient(Utilisateur client) {
+        this.client = client;
     }
 
-    public double getRemisePourcent() {
-        return remisePourcent;
+    public List<LignePanier> getLignes() {
+        return new ArrayList<>(lignes);
+    }
+
+    public void setLignes(List<LignePanier> lignes) {
+        this.lignes = new ArrayList<>(lignes);
+        this.montantTotal = calculerTotal();
     }
 
     public LocalDate getDate() {
         return date;
     }
 
+    public void setDate(LocalDate date) {
+        this.date = date;
+    }
+
     public double getMontantTotal() {
         return montantTotal;
-    }
-
-    public String getDateFormatee() {
-        return date.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-    }
-
-    public void setId(int id) {
-        this.id = id;
     }
 
     public void setMontantTotal(double montantTotal) {

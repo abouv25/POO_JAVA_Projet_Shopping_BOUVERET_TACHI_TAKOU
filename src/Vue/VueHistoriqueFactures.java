@@ -16,6 +16,7 @@ public class VueHistoriqueFactures extends JFrame {
     private JTable tableFactures;
     private Utilisateur utilisateur;
     private JButton boutonVoirDetail;
+    private JComboBox<Integer> comboBoxAnnee;
 
     public VueHistoriqueFactures(Utilisateur utilisateur) {
         this.utilisateur = utilisateur;
@@ -26,8 +27,20 @@ public class VueHistoriqueFactures extends JFrame {
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
+        // Ajout du JComboBox pour le filtrage par année
+        comboBoxAnnee = new JComboBox<>(new Integer[]{2023, 2024, 2025, 2026}); // Années à choisir
+        comboBoxAnnee.addActionListener(e -> chargerFactures()); // Recharger les factures lorsque l'année est sélectionnée
+
+        JPanel panelHaut = new JPanel();
+        panelHaut.setLayout(new BorderLayout());
+        panelHaut.add(new JLabel("Filtrer par année : "), BorderLayout.WEST);
+        panelHaut.add(comboBoxAnnee, BorderLayout.CENTER);
+
+        add(panelHaut, BorderLayout.NORTH);
+
+        // Table pour afficher les factures
         tableFactures = new JTable();
-        chargerFactures();
+        chargerFactures(); // Charger les factures par défaut (année 2023)
 
         tableFactures.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -45,8 +58,9 @@ public class VueHistoriqueFactures extends JFrame {
     }
 
     private void chargerFactures() {
+        int anneeSelectionnee = (int) comboBoxAnnee.getSelectedItem();
         FactureDAO dao = new FactureDAO();
-        List<Facture> factures = dao.listerFacturesPourUtilisateur(utilisateur);
+        List<Facture> factures = dao.getFacturesByYear(anneeSelectionnee);
 
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"ID", "Date", "Montant Total (€)", "Remise (%)"}, 0);
@@ -71,6 +85,6 @@ public class VueHistoriqueFactures extends JFrame {
         }
 
         int idFacture = (int) tableFactures.getValueAt(row, 0);
-        new VueDetailFacture(idFacture,utilisateur).setVisible(true);
+        new VueDetailFacture(idFacture, utilisateur).setVisible(true);
     }
 }

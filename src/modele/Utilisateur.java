@@ -1,8 +1,5 @@
 package modele;
 
-/**
- * Classe représentant un utilisateur/client de l'application.
- */
 public class Utilisateur {
     private int id;
     private String nom;
@@ -11,8 +8,6 @@ public class Utilisateur {
     private boolean clientFidele;
 
     // Constructeurs
-    public Utilisateur() {}
-
     public Utilisateur(int id, String nom, String email, String motDePasse, boolean clientFidele) {
         this.id = id;
         this.nom = nom;
@@ -21,7 +16,7 @@ public class Utilisateur {
         this.clientFidele = clientFidele;
     }
 
-    // Getters / Setters
+    // Getters et setters
     public int getId() {
         return id;
     }
@@ -60,10 +55,5 @@ public class Utilisateur {
 
     public void setClientFidele(boolean clientFidele) {
         this.clientFidele = clientFidele;
-    }
-
-    @Override
-    public String toString() {
-        return nom + " <" + email + ">";
     }
 }

@@ -4,6 +4,7 @@ import DAO.FactureDAO;
 import modele.Facture;
 import modele.LignePanier;
 import modele.Utilisateur;
+import modele.Produit;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableModel;
@@ -69,11 +70,11 @@ public class VueFacture extends JFrame {
                 new Object[]{"Produit", "Prix unitaire", "Quantité", "Sous-total"}, 0);
 
         for (LignePanier l : lignes) {
-            model.addRow(new Object[]{
+            model.addRow(new Object[] {
                     l.getNomProduit(),
                     String.format("%.2f", l.getPrix()) + " €",
                     l.getQuantite(),
-                    String.format("%.2f", l.getSousTotal()) + " €"
+                    String.format("%.2f", l.getSousTotal()) + " €"  // Utilisation de getSousTotal
             });
         }
 
@@ -85,8 +86,8 @@ public class VueFacture extends JFrame {
         Utilisateur user = new Utilisateur(1, "Antoine", "a@mail.com", "1234", true);
 
         List<LignePanier> lignes = List.of(
-                new LignePanier(1, "T-shirt", 15.0, 2),
-                new LignePanier(2, "Casquette", 12.5, 1)
+                new LignePanier(1, new Produit(1, "T-shirt", 15.0,2), 2),
+                new LignePanier(2, new Produit(2, "Casquette", 12.5,2), 1)
         );
 
         SwingUtilities.invokeLater(() -> new VueFacture(user, lignes).setVisible(true));

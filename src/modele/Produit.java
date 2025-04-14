@@ -1,8 +1,5 @@
 package modele;
 
-/**
- * Classe représentant un produit disponible à la vente.
- */
 public class Produit {
     private int id;
     private String nom;

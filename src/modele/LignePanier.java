@@ -1,24 +1,33 @@
 package modele;
 
-/**
- * Représente une ligne du panier stockée en base de données
- * et utilisée pour l'affichage dans les interfaces Swing.
- */
 public class LignePanier {
     private int idProduit;
-    private String nomProduit;
-    private double prix;
+    private Produit produit;
     private int quantite;
 
-    public LignePanier() {}
-
-    public LignePanier(int idProduit, String nomProduit, double prix, int quantite) {
+    // Constructeur
+    public LignePanier(int idProduit, Produit produit, int quantite) {
         this.idProduit = idProduit;
-        this.nomProduit = nomProduit;
-        this.prix = prix;
+        this.produit = produit;
         this.quantite = quantite;
     }
 
+    // Méthode pour obtenir le nom du produit
+    public String getNomProduit() {
+        return this.produit.getNom();  // Accède au nom du produit
+    }
+
+    // Méthode pour obtenir le prix du produit
+    public double getPrix() {
+        return this.produit.getPrix();  // Accède au prix du produit
+    }
+
+    // Ajout de la méthode getSousTotal pour calculer le sous-total
+    public double getSousTotal() {
+        return this.produit.getPrix() * this.quantite;
+    }
+
+    // Getters et setters
     public int getIdProduit() {
         return idProduit;
     }
@@ -27,20 +36,12 @@ public class LignePanier {
         this.idProduit = idProduit;
     }
 
-    public String getNomProduit() {
-        return nomProduit;
+    public Produit getProduit() {
+        return produit;
     }
 
-    public void setNomProduit(String nomProduit) {
-        this.nomProduit = nomProduit;
-    }
-
-    public double getPrix() {
-        return prix;
-    }
-
-    public void setPrix(double prix) {
-        this.prix = prix;
+    public void setProduit(Produit produit) {
+        this.produit = produit;
     }
 
     public int getQuantite() {
@@ -49,14 +50,5 @@ public class LignePanier {
 
     public void setQuantite(int quantite) {
         this.quantite = quantite;
-    }
-
-    public double getSousTotal() {
-        return prix * quantite;
-    }
-
-    @Override
-    public String toString() {
-        return nomProduit + " x" + quantite + " (" + prix + "€)";
     }
 }
