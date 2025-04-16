@@ -9,45 +9,107 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class VueHistoriqueFactures extends JFrame {
 
     private JTable tableFactures;
     private Utilisateur utilisateur;
     private JButton boutonVoirDetail;
+    private JCheckBox checkBox2025;
+    private JButton boutonAccueil;
+    private JComboBox<String> triComboBox;
+    private FactureDAO dao;
 
     public VueHistoriqueFactures(Utilisateur utilisateur) {
         this.utilisateur = utilisateur;
+        this.dao = new FactureDAO();
 
         setTitle("Historique des Factures");
-        setSize(600, 400);
+        setSize(750, 480);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
         tableFactures = new JTable();
-        chargerFactures();
+
+        // --- Panneau du haut avec filtre, tri et bouton accueil ---
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        checkBox2025 = new JCheckBox("Afficher uniquement 2025");
+        boutonAccueil = new JButton("Revenir à l’accueil");
+        triComboBox = new JComboBox<>(new String[]{
+                "Aucun tri", "Tri par Montant croissant", "Tri par Date décroissante"
+        });
+
+        topPanel.add(checkBox2025);
+        topPanel.add(triComboBox);
+        topPanel.add(boutonAccueil);
+        add(topPanel, BorderLayout.NORTH);
+
+        // Listeners
+        checkBox2025.addActionListener(e -> rechargerFactures());
+        triComboBox.addActionListener(e -> rechargerFactures());
+        boutonAccueil.addActionListener(e -> {
+            this.dispose();
+            new VueAccueil().setVisible(true); // à adapter si besoin
+        });
+
+        // --- Tableau central ---
+        add(new JScrollPane(tableFactures), BorderLayout.CENTER);
+
+        // --- Bouton de détail ---
+        boutonVoirDetail = new JButton("Voir les détails");
+        boutonVoirDetail.addActionListener(e -> ouvrirDetail());
+        add(boutonVoirDetail, BorderLayout.SOUTH);
 
         tableFactures.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) { // double-clic
+                if (e.getClickCount() == 2) {
                     ouvrirDetail();
                 }
             }
         });
 
-        add(new JScrollPane(tableFactures), BorderLayout.CENTER);
-
-        boutonVoirDetail = new JButton("Voir les détails");
-        boutonVoirDetail.addActionListener(e -> ouvrirDetail());
-        add(boutonVoirDetail, BorderLayout.SOUTH);
+        rechargerFactures(); // Chargement initial
     }
 
-    private void chargerFactures() {
-        FactureDAO dao = new FactureDAO();
+    private void rechargerFactures() {
         List<Facture> factures = dao.listerFacturesPourUtilisateur(utilisateur);
 
+        // Filtrage
+        if (checkBox2025.isSelected()) {
+            factures = factures.stream()
+                    .filter(f -> {
+                        try {
+                            LocalDate date = LocalDate.parse(f.getDateFormatee());
+                            return date.getYear() == 2025;
+                        } catch (Exception e) {
+                            return false;
+                        }
+                    })
+                    .collect(Collectors.toList());
+        }
+
+        // Tri
+        String triChoisi = (String) triComboBox.getSelectedItem();
+        if (triChoisi != null) {
+            switch (triChoisi) {
+                case "Tri par Montant croissant":
+                    factures.sort(Comparator.comparingDouble(Facture::getMontantTotal));
+                    break;
+                case "Tri par Date décroissante":
+                    factures.sort(Comparator.comparing(Facture::getDateFormatee).reversed());
+                    break;
+            }
+        }
+
+        chargerFacturesDansTableau(factures);
+    }
+
+    private void chargerFacturesDansTableau(List<Facture> factures) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"ID", "Date", "Montant Total (€)", "Remise (%)"}, 0);
 
@@ -71,6 +133,6 @@ public class VueHistoriqueFactures extends JFrame {
         }
 
         int idFacture = (int) tableFactures.getValueAt(row, 0);
-        new VueDetailFacture(idFacture,utilisateur).setVisible(true);
+        new VueDetailFacture(idFacture, utilisateur).setVisible(true);
     }
 }

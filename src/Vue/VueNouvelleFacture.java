@@ -10,14 +10,14 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class VueFacture extends JFrame {
+public class VueNouvelleFacture extends JFrame {
 
     private JTable tableFacture;
     private JLabel labelTotal;
     private JLabel labelRemise;
     private JButton boutonConfirmer;
 
-    public VueFacture(Utilisateur utilisateur, List<LignePanier> lignes) {
+    public VueNouvelleFacture(Utilisateur utilisateur, List<LignePanier> lignes) {
         setTitle("Facture");
         setSize(600, 400);
         setLocationRelativeTo(null);
@@ -89,6 +89,6 @@ public class VueFacture extends JFrame {
                 new LignePanier(2, "Casquette", 12.5, 1)
         );
 
-        SwingUtilities.invokeLater(() -> new VueFacture(user, lignes).setVisible(true));
+        SwingUtilities.invokeLater(() -> new VueNouvelleFacture(user, lignes).setVisible(true));
     }
 }

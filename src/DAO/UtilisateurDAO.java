@@ -31,7 +31,7 @@ public class UtilisateurDAO {
         }
     }
 
-    // Retrouver un utilisateur par email et mot de passe (connexion)
+    // ✅ Connexion : vérification d'un utilisateur via ses identifiants
     public Utilisateur trouverParEmailEtMotDePasse(String email, String motDePasse) {
         String sql = "SELECT * FROM utilisateur WHERE email = ? AND motDePasse = ?";
 

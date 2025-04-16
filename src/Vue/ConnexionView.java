@@ -1,5 +1,8 @@
 package Vue;
 
+import DAO.UtilisateurDAO;
+import modele.Utilisateur;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -26,12 +29,21 @@ public class ConnexionView extends JPanel {
 
         JButton loginButton = new JButton("Se connecter");
 
-        // Simule une connexion et bascule vers le catalogue
         loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-                // À remplacer par vérification réelle via UtilisateurDAO
-                JOptionPane.showMessageDialog(mainWindow, "Connexion réussie !");
-                mainWindow.switchTo("catalogue"); // prochaine vue à créer
+                String email = emailField.getText();
+                String password = new String(passwordField.getPassword());
+
+                UtilisateurDAO dao = new UtilisateurDAO();
+                Utilisateur utilisateur = dao.verifierConnexion(email, password);
+
+                if (utilisateur != null) {
+                    JOptionPane.showMessageDialog(mainWindow, "Connexion réussie !");
+                    mainWindow.setUtilisateurConnecte(utilisateur); // à créer si pas encore fait
+                    mainWindow.switchTo("catalogue"); // vue produits à créer
+                } else {
+                    JOptionPane.showMessageDialog(mainWindow, "Identifiants incorrects.");
+                }
             }
         });
 

@@ -2,7 +2,7 @@ package App;
 
 import modele.LignePanier;
 import modele.Utilisateur;
-import Vue.VueFacture;
+import Vue.VueNouvelleFacture;
 
 import javax.swing.*;
 import java.util.List;
@@ -19,6 +19,6 @@ public class MainFactureTest {
         );
 
         // Lancer la fenêtre de facture
-        SwingUtilities.invokeLater(() -> new VueFacture(utilisateur, panierSimule).setVisible(true));
+        SwingUtilities.invokeLater(() -> new VueNouvelleFacture(utilisateur, panierSimule).setVisible(true));
     }
 }
