@@ -30,7 +30,10 @@ public class MainWindow extends JFrame {
         ajouterVue("connexion", new ConnexionView(this));
         ajouterVue("accueil", new VueAccueil(this));
         ajouterVue("panier", new VuePanier(this));
-        ajouterVue("inscription", new VueInscription(this)); // si utilisée
+        ajouterVue("inscription", new VueInscription(this));
+
+        // Ajoute par défaut la vue catalogue sans utilisateur connecté
+        chargerCatalogue();
 
         // Vue d’accueil par défaut
         setContentPane(mainPanel);
@@ -62,13 +65,11 @@ public class MainWindow extends JFrame {
         }
         cardLayout.show(mainPanel, viewName);
 
-        // Mise à jour de l'accueil si besoin
         if ("accueil".equals(viewName)) {
             VueAccueil accueil = (VueAccueil) vues.get("accueil");
             accueil.mettreAJourAffichage();
         }
 
-        // Rafraîchir panier si affiché
         if ("panier".equals(viewName)) {
             VuePanier vp = (VuePanier) vues.get("panier");
             vp.rafraichir();
@@ -91,15 +92,19 @@ public class MainWindow extends JFrame {
         return vues;
     }
 
-    // Chargement dynamique du catalogue
+    // Chargement sécurisé et dynamique du catalogue
     public void chargerCatalogue() {
-        VueProduits vueProduits = new VueProduits(this, utilisateurConnecte);
-        ajouterVue("catalogue", vueProduits);
+        if (!vues.containsKey("catalogue")) {
+            VueProduits vueProduits = new VueProduits(this, utilisateurConnecte);
+            ajouterVue("catalogue", vueProduits);
+        }
     }
 
-    // Chargement de la vue admin
+    // Chargement sécurisé de la vue admin
     public void chargerVueAdmin() {
-        VueAdmin adminView = new VueAdmin(this);
-        ajouterVue("admin", adminView);
+        if (!vues.containsKey("admin")) {
+            VueAdmin adminView = new VueAdmin(this);
+            ajouterVue("admin", adminView);
+        }
     }
 }

@@ -15,10 +15,7 @@ public class ConnexionView extends JPanel {
     public ConnexionView(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
 
-        setLayout(new BorderLayout());
-
-        // --- Partie centrale avec GridBagLayout pour le formulaire ---
-        JPanel centre = new JPanel(new GridBagLayout());
+        setLayout(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
         JLabel title = new JLabel("Connexion");
@@ -31,7 +28,10 @@ public class ConnexionView extends JPanel {
         JPasswordField passwordField = new JPasswordField(20);
 
         JButton loginButton = new JButton("Se connecter");
+        JButton signupButton = new JButton("S'inscrire");
+        JButton accueilButton = new JButton("Accueil");
 
+        // Action de connexion
         loginButton.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
                 String email = emailField.getText();
@@ -44,10 +44,8 @@ public class ConnexionView extends JPanel {
                     JOptionPane.showMessageDialog(mainWindow, "Connexion réussie !");
                     mainWindow.setUtilisateurConnecte(utilisateur);
 
-                    // ✅ Ajout dynamique de VueProduits
-                    VueProduits vueProduits = new VueProduits(mainWindow, utilisateur);
-                    mainWindow.ajouterVue("catalogue", vueProduits);
-
+                    // Chargement dynamique de VueProduits
+                    mainWindow.chargerCatalogue();
                     mainWindow.switchTo("catalogue");
                 } else {
                     JOptionPane.showMessageDialog(mainWindow, "Identifiants incorrects.");
@@ -55,32 +53,43 @@ public class ConnexionView extends JPanel {
             }
         });
 
+        // Action d'inscription
+        signupButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                mainWindow.switchTo("inscription");  // Passer à la page d'inscription
+            }
+        });
+
+        // Action pour revenir à l'accueil
+        accueilButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                mainWindow.switchTo("accueil");
+            }
+        });
+
+        // Mise en page
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        centre.add(title, gbc);
+        add(title, gbc);
 
         gbc.gridwidth = 1;
         gbc.gridy++;
-        centre.add(emailLabel, gbc);
+        add(emailLabel, gbc);
         gbc.gridx = 1;
-        centre.add(emailField, gbc);
+        add(emailField, gbc);
 
         gbc.gridx = 0; gbc.gridy++;
-        centre.add(passwordLabel, gbc);
+        add(passwordLabel, gbc);
         gbc.gridx = 1;
-        centre.add(passwordField, gbc);
+        add(passwordField, gbc);
 
         gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2;
-        centre.add(loginButton, gbc);
+        add(loginButton, gbc);
 
-        add(centre, BorderLayout.CENTER);
+        gbc.gridy++;
+        add(signupButton, gbc);  // Ajout du bouton "S'inscrire"
 
-        // --- Bas : bouton accueil ---
-        JPanel bas = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JButton boutonAccueil = new JButton("Accueil");
-        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
-        bas.add(boutonAccueil);
-
-        add(bas, BorderLayout.SOUTH);
+        gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2;
+        add(accueilButton, gbc);  // Ajout du bouton "Accueil"
     }
 }

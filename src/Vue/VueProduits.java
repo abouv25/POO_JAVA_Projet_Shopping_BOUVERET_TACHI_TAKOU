@@ -66,7 +66,6 @@ public class VueProduits extends JPanel {
             });
         }
     }
-
     private void ajouterAuPanier(ActionEvent e) {
         int row = tableProduits.getSelectedRow();
         if (row == -1) {
@@ -76,7 +75,18 @@ public class VueProduits extends JPanel {
 
         int idProduit = (int) model.getValueAt(row, 0);
         String nom = (String) model.getValueAt(row, 1);
-        double prix = Double.parseDouble(model.getValueAt(row, 2).toString());
+        String prixStr = model.getValueAt(row, 2).toString();
+
+        // Remplacer la virgule par un point
+        prixStr = prixStr.replace(",", ".");
+
+        double prix = 0;
+        try {
+            prix = Double.parseDouble(prixStr);
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Prix invalide.");
+            return;
+        }
 
         String input = JOptionPane.showInputDialog(this, "Quantité à ajouter :", "1");
         if (input == null) return;
@@ -94,4 +104,6 @@ public class VueProduits extends JPanel {
             JOptionPane.showMessageDialog(this, "Quantité invalide.");
         }
     }
+
+
 }
