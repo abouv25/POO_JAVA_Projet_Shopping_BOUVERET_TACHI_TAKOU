@@ -28,6 +28,28 @@ public class ProduitDAO {
             return false;
         }
     }
+    // Récupérer un produit complet par ID
+    public Produit getProduitParId(int id) {
+        String sql = "SELECT * FROM produit WHERE id = ?";
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setInt(1, id);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new Produit(
+                        rs.getInt("id"),
+                        rs.getString("nom"),
+                        rs.getDouble("prix"),
+                        rs.getInt("quantite_stock"),
+                        rs.getString("image")
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur getProduitParId : " + e.getMessage());
+        }
+        return null;
+    }
+
 
     // Lister tous les produits
     public List<Produit> listerProduits() {

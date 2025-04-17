@@ -46,6 +46,13 @@ public class MainWindow extends JFrame {
 
         setVisible(true);
     }
+    public void chargerVueGestionUtilisateurs() {
+        if (!vues.containsKey("gestionUtilisateurs")) {
+            VueGestionUtilisateurs vue = new VueGestionUtilisateurs(this);
+            ajouterVue("gestionUtilisateurs", vue);
+        }
+    }
+
 
     // Ajouter une vue dynamiquement
     public void ajouterVue(String nom, JPanel vue) {

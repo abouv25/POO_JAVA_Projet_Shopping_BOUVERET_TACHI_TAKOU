@@ -31,6 +31,14 @@ public class Facture {
         this.remisePourcent = remisePourcent;
         this.lignes = null; // utilisé uniquement côté affichage
     }
+    public Facture(Utilisateur client, List<LignePanier> lignes, double remisePourcent) {
+        this.client = client;
+        this.lignes = lignes;
+        this.date = LocalDate.now();
+        this.remisePourcent = remisePourcent;
+        this.montantTotal = calculerTotal();
+    }
+
 
     public double calculerTotal() {
         if (lignes == null) return montantTotal;

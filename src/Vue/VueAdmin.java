@@ -19,6 +19,7 @@ public class VueAdmin extends JPanel {
     private JButton boutonAjouter;
     private JButton boutonSupprimer;
     private JButton boutonAccueil;
+    private JButton boutonGererUtilisateurs;
 
     public VueAdmin(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
@@ -56,9 +57,11 @@ public class VueAdmin extends JPanel {
         boutonAjouter = new JButton("Ajouter un produit");
         boutonSupprimer = new JButton("Supprimer sélection");
         boutonAccueil = new JButton("Accueil");
+        boutonGererUtilisateurs = new JButton("👥 Gérer les utilisateurs");
 
         bas.add(boutonAjouter);
         bas.add(boutonSupprimer);
+        bas.add(boutonGererUtilisateurs);
         bas.add(boutonAccueil);
 
         add(bas, BorderLayout.SOUTH);
@@ -67,6 +70,10 @@ public class VueAdmin extends JPanel {
         boutonAjouter.addActionListener(e -> ajouterProduit());
         boutonSupprimer.addActionListener(e -> supprimerProduit());
         boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
+        boutonGererUtilisateurs.addActionListener(e -> {
+            mainWindow.ajouterVue("gestionUtilisateurs", new VueGestionUtilisateurs(mainWindow));
+            mainWindow.switchTo("gestionUtilisateurs");
+        });
 
         chargerProduits();
     }
@@ -142,7 +149,6 @@ public class VueAdmin extends JPanel {
             JOptionPane.showMessageDialog(this, "Entrées invalides.");
         }
     }
-
 
     private void supprimerProduit() {
         int row = tableProduits.getSelectedRow();

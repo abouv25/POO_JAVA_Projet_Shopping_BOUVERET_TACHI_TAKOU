@@ -1,7 +1,10 @@
 package Vue;
 
+import DAO.FactureDAO;
+import DAO.ProduitDAO;
 import modele.LignePanier;
 import modele.Panier;
+import modele.Produit;
 import modele.Utilisateur;
 
 import javax.swing.*;
@@ -143,16 +146,54 @@ public class VuePanier extends JPanel {
             return;
         }
 
-        List<LignePanier> lignes = mainWindow.getPanier().getLignes();
+        Panier panier = mainWindow.getPanier();
+        List<LignePanier> lignes = panier.getLignes();
 
         if (lignes.isEmpty()) {
             JOptionPane.showMessageDialog(this, "Le panier est vide.");
             return;
         }
 
-        VueNouvelleFacture vueFacture = new VueNouvelleFacture(mainWindow, utilisateur, lignes);
-        mainWindow.ajouterVue("facture", vueFacture);
-        mainWindow.switchTo("facture");
-    }
+        ProduitDAO produitDAO = new ProduitDAO();
+        for (LignePanier ligne : lignes) {
+            Produit p = produitDAO.getProduitParId(ligne.getIdProduit());
+            if (p == null) {
+                JOptionPane.showMessageDialog(this, "Produit introuvable en base.");
+                return;
+            }
+            if (ligne.getQuantite() > p.getQuantiteStock()) {
+                JOptionPane.showMessageDialog(this, "Stock insuffisant pour le produit : " + p.getNom());
+                return;
+            }
+        }
 
+        int confirm = JOptionPane.showConfirmDialog(this,
+                "Confirmer la commande de " + lignes.size() + " article(s) ?",
+                "Confirmation commande",
+                JOptionPane.YES_NO_OPTION);
+
+        if (confirm != JOptionPane.YES_OPTION) return;
+
+        modele.Facture facture = new modele.Facture(utilisateur, lignes, utilisateur.isClientFidele() ? 10.0 : 0.0);
+        FactureDAO dao = new FactureDAO();
+        boolean ok = dao.ajouterFacture(facture);
+
+        if (ok) {
+            for (LignePanier ligne : lignes) {
+                Produit p = produitDAO.getProduitParId(ligne.getIdProduit());
+                p.setQuantiteStock(p.getQuantiteStock() - ligne.getQuantite());
+                produitDAO.modifierProduit(p);
+            }
+
+            JOptionPane.showMessageDialog(this, "Commande validée et facture enregistrée !");
+            panier.viderPanier();
+
+            VueDetailFacture vueDetail = new VueDetailFacture(facture.getId(), utilisateur, mainWindow);
+            mainWindow.ajouterVue("detailFacture", vueDetail);
+            mainWindow.switchTo("detailFacture");
+
+        } else {
+            JOptionPane.showMessageDialog(this, "Erreur lors de la validation de la commande.");
+        }
+    }
 }
