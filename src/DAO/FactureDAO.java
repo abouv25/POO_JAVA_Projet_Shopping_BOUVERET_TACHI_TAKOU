@@ -131,55 +131,6 @@ public class FactureDAO {
         return map;
     }
 
-    public Map<String, Double> totalVentesParUtilisateur() {
-        Map<String, Double> map = new TreeMap<>();
-        String sql = """
-            SELECT u.nom, SUM(f.montant_total) AS totalVentes
-            FROM facture f
-            JOIN utilisateur u ON f.id_utilisateur = u.id
-            GROUP BY u.nom ORDER BY totalVentes DESC
-        """;
-
-        try (Connection conn = ConnexionBD.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                map.put(rs.getString("nom"), rs.getDouble("totalVentes"));
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Erreur stats utilisateur : " + e.getMessage());
-        }
-
-        return map;
-    }
-
-    public Map<String, Double> totalVentesParProduit() {
-        Map<String, Double> map = new TreeMap<>();
-        String sql = """
-            SELECT p.nom, SUM(lf.quantite * lf.prix_unitaire) AS totalVente
-            FROM ligne_facture lf
-            JOIN produit p ON p.id = lf.id_produit
-            JOIN facture f ON f.id = lf.id_facture
-            GROUP BY p.nom ORDER BY totalVente DESC
-        """;
-
-        try (Connection conn = ConnexionBD.getConnection();
-             PreparedStatement stmt = conn.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-
-            while (rs.next()) {
-                map.put(rs.getString("nom"), rs.getDouble("totalVente"));
-            }
-
-        } catch (SQLException e) {
-            System.err.println("Erreur stats produit : " + e.getMessage());
-        }
-
-        return map;
-    }
-
     // === STATISTIQUES FILTRÉES (ANNEE + MOIS) ===
 
     public Map<String, Double> totalVentesParDate(int annee, int mois) {

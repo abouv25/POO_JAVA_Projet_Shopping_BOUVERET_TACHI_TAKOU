@@ -1,0 +1,37 @@
+package Vue;
+
+import javax.swing.*;
+import java.awt.*;
+
+public class StyleUI {
+
+    public static void appliquerFondEtCadre(JComponent comp) {
+        comp.setBackground(Color.WHITE);
+        comp.setForeground(Color.BLACK);
+        if (comp instanceof JPanel) {
+            ((JPanel) comp).setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        }
+    }
+
+    public static void styliserBouton(JButton btn) {
+        btn.setBackground(Color.WHITE);
+        btn.setForeground(Color.BLACK);
+        btn.setFocusPainted(false);
+        btn.setBorder(BorderFactory.createLineBorder(Color.BLACK));
+    }
+
+    public static void styliserTitre(JLabel label) {
+        label.setFont(new Font("SansSerif", Font.BOLD, 18));
+        label.setForeground(Color.BLACK);
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+    }
+
+    public static void appliquerStyleComplet(JComponent comp) {
+        appliquerFondEtCadre(comp);
+        for (Component c : comp.getComponents()) {
+            if (c instanceof JComponent) {
+                appliquerFondEtCadre((JComponent) c);
+            }
+        }
+    }
+}

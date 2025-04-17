@@ -18,22 +18,28 @@ public class VueAccueil extends JPanel {
     public VueAccueil(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
         setLayout(new BorderLayout());
+        StyleUI.appliquerFondEtCadre(this);
 
-        // --- Logo centré en haut ---
+        // --- Logo réduit par 4 ---
         ImageIcon logo = new ImageIcon(getClass().getResource("logoBTTShopping.png"));
-        Image img = logo.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
-        JLabel logoLabel = new JLabel(new ImageIcon(img));
+        Image imgReduite = logo.getImage().getScaledInstance(
+                logo.getIconWidth() / 4,
+                logo.getIconHeight() / 4,
+                Image.SCALE_SMOOTH
+        );
+        JLabel logoLabel = new JLabel(new ImageIcon(imgReduite));
         logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(logoLabel, BorderLayout.NORTH);
 
-        // --- Centre avec les boutons et message ---
+        // --- Centre avec boutons + message ---
         JPanel centre = new JPanel();
         centre.setLayout(new BoxLayout(centre, BoxLayout.Y_AXIS));
         centre.setBorder(BorderFactory.createEmptyBorder(30, 80, 30, 80));
+        StyleUI.appliquerFondEtCadre(centre);
 
         bienvenueLabel = new JLabel("", SwingConstants.CENTER);
         bienvenueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        bienvenueLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
+        StyleUI.styliserTitre(bienvenueLabel);
         centre.add(bienvenueLabel);
         centre.add(Box.createRigidArea(new Dimension(0, 20)));
 
@@ -46,6 +52,7 @@ public class VueAccueil extends JPanel {
         for (JButton btn : new JButton[]{boutonCatalogue, boutonConnexion, boutonPanier, boutonHistorique, boutonDeconnexion}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMaximumSize(new Dimension(250, 40));
+            StyleUI.styliserBouton(btn);
             centre.add(btn);
             centre.add(Box.createRigidArea(new Dimension(0, 10)));
         }
@@ -86,7 +93,7 @@ public class VueAccueil extends JPanel {
     public void mettreAJourAffichage() {
         Utilisateur u = mainWindow.getUtilisateurConnecte();
         boolean connecte = (u != null);
-        bienvenueLabel.setText(connecte ? "Bonjour " + u.getNom() + " !" : "Bienvenue, invité !");
+        bienvenueLabel.setText(connecte ? "Bonjour " + u.getPrenom() + " " + u.getNom() + " !" : "Bienvenue, invité !");
 
         boutonConnexion.setVisible(!connecte);
         boutonHistorique.setVisible(connecte);
