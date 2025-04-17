@@ -5,6 +5,7 @@ import modele.Produit;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 
 public class VueDetailProduit extends JFrame {
 
@@ -19,14 +20,34 @@ public class VueDetailProduit extends JFrame {
         this.produit = produit;
 
         setTitle("📝 Détail du produit : " + produit.getNom());
-        setSize(400, 300);
+        setSize(400, 450);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
-        // Formulaire
+        // 🖼️ Panel image
+        JPanel imagePanel = new JPanel();
+        imagePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+
+        if (produit.getImage() != null && !produit.getImage().isBlank()) {
+            File imageFile = new File(produit.getImage());
+            if (imageFile.exists()) {
+                ImageIcon icon = new ImageIcon(produit.getImage());
+                Image img = icon.getImage().getScaledInstance(200, 150, Image.SCALE_SMOOTH);
+                JLabel imageLabel = new JLabel(new ImageIcon(img));
+                imagePanel.add(imageLabel);
+            } else {
+                imagePanel.add(new JLabel("Image introuvable"));
+            }
+        } else {
+            imagePanel.add(new JLabel("Aucune image"));
+        }
+
+        add(imagePanel, BorderLayout.NORTH);
+
+        // 📝 Formulaire
         JPanel form = new JPanel(new GridLayout(4, 2, 10, 10));
-        form.setBorder(BorderFactory.createEmptyBorder(20, 30, 20, 30));
+        form.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
 
         champNom = new JTextField(produit.getNom());
         champPrix = new JTextField(String.valueOf(produit.getPrix()));
@@ -39,7 +60,9 @@ public class VueDetailProduit extends JFrame {
         form.add(new JLabel("Stock :"));
         form.add(champStock);
 
-        // Bas
+        add(form, BorderLayout.CENTER);
+
+        // 🔘 Boutons
         JPanel bas = new JPanel(new FlowLayout());
         boutonEnregistrer = new JButton("💾 Enregistrer");
         boutonAccueil = new JButton("🏠 Accueil");
@@ -47,12 +70,11 @@ public class VueDetailProduit extends JFrame {
         bas.add(boutonEnregistrer);
         bas.add(boutonAccueil);
 
-        add(form, BorderLayout.CENTER);
         add(bas, BorderLayout.SOUTH);
 
         // Actions
         boutonEnregistrer.addActionListener(e -> enregistrerModifications());
-        boutonAccueil.addActionListener(e -> dispose()); // ou switchTo("accueil") si intégré
+        boutonAccueil.addActionListener(e -> dispose());
     }
 
     private void enregistrerModifications() {

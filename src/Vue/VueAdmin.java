@@ -8,6 +8,7 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.List;
 
 public class VueAdmin extends JPanel {
@@ -96,7 +97,37 @@ public class VueAdmin extends JPanel {
             double prix = Double.parseDouble(prixStr);
             int stock = Integer.parseInt(stockStr);
 
-            Produit produit = new Produit(0, nom, prix, stock);
+            // --- Choisir l'image PNG ---
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("Images PNG", "png"));
+            int result = fileChooser.showOpenDialog(this);
+
+            String cheminImage = "";
+
+            if (result == JFileChooser.APPROVE_OPTION) {
+                File imageSource = fileChooser.getSelectedFile();
+                String nomFichier = imageSource.getName();
+                File destination = new File("Vue/images/" + nomFichier);
+
+                try {
+                    java.nio.file.Files.copy(
+                            imageSource.toPath(),
+                            destination.toPath(),
+                            java.nio.file.StandardCopyOption.REPLACE_EXISTING
+                    );
+                    cheminImage = "Vue/images/" + nomFichier;
+                } catch (Exception ex) {
+                    JOptionPane.showMessageDialog(this, "Erreur lors de la copie de l'image.");
+                    ex.printStackTrace();
+                    return;
+                }
+            } else {
+                JOptionPane.showMessageDialog(this, "Ajout annulé : aucune image sélectionnée.");
+                return;
+            }
+
+            // --- Création et ajout du produit ---
+            Produit produit = new Produit(0, nom, prix, stock, cheminImage);
             ProduitDAO dao = new ProduitDAO();
             boolean ok = dao.ajouterProduit(produit);
 
@@ -106,10 +137,12 @@ public class VueAdmin extends JPanel {
             } else {
                 JOptionPane.showMessageDialog(this, "Erreur d'ajout.");
             }
+
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Entrées invalides.");
         }
     }
+
 
     private void supprimerProduit() {
         int row = tableProduits.getSelectedRow();

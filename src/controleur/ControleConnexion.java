@@ -28,7 +28,8 @@ public class ControleConnexion implements ActionListener {
         String email = vue.getEmail();
         String motDePasse = vue.getMotDePasse();
 
-        Utilisateur u = utilisateurDAO.trouverParEmailEtMotDePasse(email, motDePasse);
+        Utilisateur u = utilisateurDAO.verifierConnexion(email, motDePasse);
+
 
         if (u != null) {
             vue.afficherMessage("✅ Connexion réussie. Bienvenue " + u.getNom() + " !");

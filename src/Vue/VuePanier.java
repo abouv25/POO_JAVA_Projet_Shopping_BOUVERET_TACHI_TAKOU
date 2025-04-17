@@ -20,6 +20,9 @@ public class VuePanier extends JPanel {
         this.mainWindow = mainWindow;
         setLayout(new BorderLayout());
 
+        // ✅ Barre supérieure avec logo + utilisateur
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
+
         // Panel principal
         panelLignes = new JPanel();
         panelLignes.setLayout(new BoxLayout(panelLignes, BoxLayout.Y_AXIS));
@@ -28,7 +31,7 @@ public class VuePanier extends JPanel {
 
         // Total
         labelTotal = new JLabel("Total : 0.00 €", SwingConstants.CENTER);
-        add(labelTotal, BorderLayout.NORTH);
+        add(labelTotal, BorderLayout.SOUTH);
 
         // Bas
         JPanel bas = new JPanel(new FlowLayout(FlowLayout.CENTER));
@@ -41,7 +44,7 @@ public class VuePanier extends JPanel {
         bas.add(boutonRetour);
         bas.add(boutonVider);
         bas.add(boutonValider);
-        add(bas, BorderLayout.SOUTH);
+        add(bas, BorderLayout.PAGE_END);
 
         // Actions globales
         boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
@@ -130,6 +133,16 @@ public class VuePanier extends JPanel {
 
     private void validerCommande(ActionEvent e) {
         Utilisateur utilisateur = mainWindow.getUtilisateurConnecte();
+
+        if (utilisateur == null) {
+            JOptionPane.showMessageDialog(this,
+                    "Veuillez vous connecter pour valider votre panier.",
+                    "Connexion requise",
+                    JOptionPane.WARNING_MESSAGE);
+            mainWindow.switchTo("connexion");
+            return;
+        }
+
         List<LignePanier> lignes = mainWindow.getPanier().getLignes();
 
         if (lignes.isEmpty()) {
@@ -141,4 +154,5 @@ public class VuePanier extends JPanel {
         mainWindow.ajouterVue("facture", vueFacture);
         mainWindow.switchTo("facture");
     }
+
 }

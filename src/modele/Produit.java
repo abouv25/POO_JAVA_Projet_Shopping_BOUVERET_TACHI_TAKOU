@@ -8,6 +8,7 @@ public class Produit {
     private String nom;
     private double prix;
     private int quantiteStock;
+    private String image; // 🆕 champ image
 
     // Constructeurs
     public Produit() {}
@@ -17,6 +18,15 @@ public class Produit {
         this.nom = nom;
         this.prix = prix;
         this.quantiteStock = quantiteStock;
+    }
+
+    // 🆕 Nouveau constructeur avec image
+    public Produit(int id, String nom, double prix, int quantiteStock, String image) {
+        this.id = id;
+        this.nom = nom;
+        this.prix = prix;
+        this.quantiteStock = quantiteStock;
+        this.image = image;
     }
 
     // Getters / Setters
@@ -52,9 +62,16 @@ public class Produit {
         this.quantiteStock = quantiteStock;
     }
 
-    // ✅ Ajout pour compatibilité avec VueProduits
     public int getStock() {
         return getQuantiteStock();
+    }
+
+    public String getImage() {  // ✅ Getter pour image
+        return image;
+    }
+
+    public void setImage(String image) { // ✅ Setter pour image
+        this.image = image;
     }
 
     @Override

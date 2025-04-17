@@ -1,4 +1,4 @@
-package App;
+/*package App;
 
 import DAO.UtilisateurDAO;
 import modele.Utilisateur;
@@ -40,4 +40,4 @@ public class MainUtilisateurTest {
             System.out.println("Suppression réussie ? " + supprime);
         }
     }
-}
+}*/

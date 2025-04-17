@@ -5,20 +5,17 @@ import modele.Produit;
 import modele.Utilisateur;
 
 import javax.swing.*;
-import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.util.List;
 
 public class VueProduits extends JPanel {
 
-    private JTable tableProduits;
-    private DefaultTableModel model;
-    private JButton boutonAjouterPanier;
-    private JButton boutonVoirPanier;
-    private JButton boutonAccueil;
-    private Utilisateur utilisateur;
     private MainWindow mainWindow;
+    private Utilisateur utilisateur;
+    private JPanel panelCartes;
+    private JScrollPane scrollPane;
 
     public VueProduits(MainWindow mainWindow, Utilisateur utilisateur) {
         this.mainWindow = mainWindow;
@@ -26,84 +23,97 @@ public class VueProduits extends JPanel {
 
         setLayout(new BorderLayout());
 
-        // --- Table des produits ---
-        model = new DefaultTableModel(new Object[]{"ID", "Nom", "Prix (€)", "Stock"}, 0);
-        tableProduits = new JTable(model);
-        add(new JScrollPane(tableProduits), BorderLayout.CENTER);
+        // ✅ Barre supérieure (logo, utilisateur, panier)
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
 
-        // --- Bas : boutons ---
-        JPanel bas = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        boutonAjouterPanier = new JButton("Ajouter au panier");
-        boutonVoirPanier = new JButton("Voir le panier");
-        boutonAccueil = new JButton("Accueil");
+        // ✅ Panel central pour les cartes produit
+        panelCartes = new JPanel(new GridLayout(0, 3, 20, 20));
+        panelCartes.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        panelCartes.setBackground(new Color(250, 250, 250));
 
-        bas.add(boutonAjouterPanier);
-        bas.add(boutonVoirPanier);
-        bas.add(boutonAccueil);
-        add(bas, BorderLayout.SOUTH);
+        scrollPane = new JScrollPane(panelCartes);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        scrollPane.getVerticalScrollBar().setUnitIncrement(16); // défilement plus fluide
+        add(scrollPane, BorderLayout.CENTER);
 
-        // --- Listeners ---
-        boutonAjouterPanier.addActionListener(this::ajouterAuPanier);
-        boutonVoirPanier.addActionListener(e -> mainWindow.switchTo("panier"));
-        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
-
-        // --- Remplir les données ---
         chargerProduits();
     }
 
     private void chargerProduits() {
+        panelCartes.removeAll();
         ProduitDAO dao = new ProduitDAO();
         List<Produit> produits = dao.listerProduits();
 
-        model.setRowCount(0); // reset
-
-        for (Produit p : produits) {
-            model.addRow(new Object[]{
-                    p.getId(),
-                    p.getNom(),
-                    String.format("%.2f", p.getPrix()),
-                    p.getQuantiteStock() // 🔁 correction ici
-            });
-        }
-    }
-    private void ajouterAuPanier(ActionEvent e) {
-        int row = tableProduits.getSelectedRow();
-        if (row == -1) {
-            JOptionPane.showMessageDialog(this, "Sélectionnez un produit.");
-            return;
+        for (Produit produit : produits) {
+            panelCartes.add(creerCarteProduit(produit));
         }
 
-        int idProduit = (int) model.getValueAt(row, 0);
-        String nom = (String) model.getValueAt(row, 1);
-        String prixStr = model.getValueAt(row, 2).toString();
-
-        // Remplacer la virgule par un point
-        prixStr = prixStr.replace(",", ".");
-
-        double prix = 0;
-        try {
-            prix = Double.parseDouble(prixStr);
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Prix invalide.");
-            return;
-        }
-
-        String input = JOptionPane.showInputDialog(this, "Quantité à ajouter :", "1");
-        if (input == null) return;
-
-        try {
-            int quantite = Integer.parseInt(input);
-            if (quantite <= 0) throw new NumberFormatException();
-
-            // ✅ Ajout réel au panier
-            mainWindow.getPanier().ajouterProduit(idProduit, nom, prix, quantite);
-
-            JOptionPane.showMessageDialog(this, quantite + " x " + nom + " ajouté(s) au panier.");
-
-        } catch (NumberFormatException ex) {
-            JOptionPane.showMessageDialog(this, "Quantité invalide.");
-        }
+        panelCartes.revalidate();
+        panelCartes.repaint();
     }
 
+    private JPanel creerCarteProduit(Produit produit) {
+        JPanel carte = new JPanel();
+        carte.setLayout(new BoxLayout(carte, BoxLayout.Y_AXIS));
+        carte.setPreferredSize(new Dimension(200, 260));
+        carte.setBackground(Color.WHITE);
+        carte.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true),
+                BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
 
+        // 🌄 Image
+        JLabel imageLabel;
+        File imageFile = new File(produit.getImage());
+        if (imageFile.exists()) {
+            ImageIcon icon = new ImageIcon(produit.getImage());
+            Image img = icon.getImage().getScaledInstance(160, 100, Image.SCALE_SMOOTH);
+            imageLabel = new JLabel(new ImageIcon(img));
+        } else {
+            imageLabel = new JLabel("[Aucune image]");
+        }
+        imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        carte.add(imageLabel);
+
+        carte.add(Box.createVerticalStrut(10));
+
+        // 🏷️ Nom
+        JLabel nomLabel = new JLabel(produit.getNom(), SwingConstants.CENTER);
+        nomLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
+        nomLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        carte.add(nomLabel);
+
+        // 💶 Prix
+        JLabel prixLabel = new JLabel(String.format("%.2f €", produit.getPrix()), SwingConstants.CENTER);
+        prixLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
+        prixLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        carte.add(prixLabel);
+
+        // 📦 Stock
+        JLabel stockLabel = new JLabel("Stock : " + produit.getQuantiteStock(), SwingConstants.CENTER);
+        stockLabel.setFont(new Font("SansSerif", Font.PLAIN, 12));
+        stockLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        carte.add(stockLabel);
+
+        carte.add(Box.createVerticalStrut(10));
+
+        // ➕ Bouton
+        JButton boutonAjouter = new JButton("Ajouter au panier");
+        boutonAjouter.setAlignmentX(Component.CENTER_ALIGNMENT);
+        boutonAjouter.addActionListener((ActionEvent e) -> {
+            String input = JOptionPane.showInputDialog(this, "Quantité à ajouter :", "1");
+            if (input == null) return;
+            try {
+                int qte = Integer.parseInt(input);
+                if (qte <= 0) throw new NumberFormatException();
+                mainWindow.getPanier().ajouterProduit(produit.getId(), produit.getNom(), produit.getPrix(), qte);
+                JOptionPane.showMessageDialog(this, qte + " x " + produit.getNom() + " ajouté(s) au panier.");
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Quantité invalide.");
+            }
+        });
+
+        carte.add(boutonAjouter);
+        return carte;
+    }
 }

@@ -24,12 +24,15 @@ public class VueNouvelleFacture extends JPanel {
 
         setLayout(new BorderLayout());
 
-        // Table
+        // ✅ Barre supérieure avec logo + utilisateur
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
+
+        // ✅ Tableau des produits
         tableFacture = new JTable();
         chargerLignes(lignes);
         add(new JScrollPane(tableFacture), BorderLayout.CENTER);
 
-        // Bas de fenêtre : Total + Remise + Boutons
+        // ✅ Bas de fenêtre : Total + Remise + Boutons
         JPanel bas = new JPanel(new BorderLayout());
 
         JPanel infos = new JPanel(new GridLayout(2, 1));
@@ -49,7 +52,7 @@ public class VueNouvelleFacture extends JPanel {
 
         add(bas, BorderLayout.SOUTH);
 
-        // Calcul de la remise / total
+        // ✅ Calcul de la remise et total
         double totalBrut = lignes.stream().mapToDouble(LignePanier::getSousTotal).sum();
         double remise = utilisateur.isClientFidele() ? 0.10 * totalBrut : 0.0;
         double totalFinal = totalBrut - remise;
@@ -57,7 +60,7 @@ public class VueNouvelleFacture extends JPanel {
         labelRemise.setText("Remise : " + (utilisateur.isClientFidele() ? "10%" : "Aucune"));
         labelTotal.setText("Total à payer : " + String.format("%.2f", totalFinal) + " €");
 
-        // Action : enregistrement de la facture
+        // ✅ Enregistrement de la facture
         boutonConfirmer.addActionListener(e -> {
             Facture facture = new Facture(utilisateur, lignes);
             FactureDAO dao = new FactureDAO();

@@ -8,72 +8,89 @@ import java.awt.*;
 public class VueAccueil extends JPanel {
 
     private MainWindow mainWindow;
+    private JLabel bienvenueLabel;
     private JButton boutonCatalogue;
     private JButton boutonConnexion;
-    private JButton boutonHistorique;
     private JButton boutonPanier;
+    private JButton boutonHistorique;
     private JButton boutonDeconnexion;
-    private JLabel bienvenueLabel;
 
     public VueAccueil(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
         setLayout(new BorderLayout());
 
-        // --- Titre ou logo ---
-        JLabel titre = new JLabel("🛒 Bienvenue sur Shopping B-T-T", SwingConstants.CENTER);
-        titre.setFont(new Font("SansSerif", Font.BOLD, 22));
-        add(titre, BorderLayout.NORTH);
+        // --- Logo centré en haut ---
+        ImageIcon logo = new ImageIcon(getClass().getResource("logoBTTShopping.png"));
+        Image img = logo.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
+        JLabel logoLabel = new JLabel(new ImageIcon(img));
+        logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        add(logoLabel, BorderLayout.NORTH);
 
-        // --- Contenu central ---
-        JPanel centre = new JPanel(new GridLayout(5, 1, 10, 10));
-        centre.setBorder(BorderFactory.createEmptyBorder(30, 60, 30, 60));
+        // --- Centre avec les boutons et message ---
+        JPanel centre = new JPanel();
+        centre.setLayout(new BoxLayout(centre, BoxLayout.Y_AXIS));
+        centre.setBorder(BorderFactory.createEmptyBorder(30, 80, 30, 80));
 
         bienvenueLabel = new JLabel("", SwingConstants.CENTER);
+        bienvenueLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        bienvenueLabel.setFont(new Font("SansSerif", Font.PLAIN, 16));
         centre.add(bienvenueLabel);
+        centre.add(Box.createRigidArea(new Dimension(0, 20)));
 
         boutonCatalogue = new JButton("🛍️ Catalogue Produits");
         boutonConnexion = new JButton("🔑 Connexion");
-        boutonHistorique = new JButton("📄 Historique de Factures");
         boutonPanier = new JButton("🛒 Mon Panier");
+        boutonHistorique = new JButton("📄 Historique de Factures");
         boutonDeconnexion = new JButton("🚪 Déconnexion");
 
-        centre.add(boutonCatalogue);
-        centre.add(boutonConnexion);
-        centre.add(boutonPanier);
-        centre.add(boutonHistorique);
-        centre.add(boutonDeconnexion);
+        for (JButton btn : new JButton[]{boutonCatalogue, boutonConnexion, boutonPanier, boutonHistorique, boutonDeconnexion}) {
+            btn.setAlignmentX(Component.CENTER_ALIGNMENT);
+            btn.setMaximumSize(new Dimension(250, 40));
+            centre.add(btn);
+            centre.add(Box.createRigidArea(new Dimension(0, 10)));
+        }
 
         add(centre, BorderLayout.CENTER);
 
-        // --- Actions des boutons ---
+        // --- Listeners des boutons ---
         boutonCatalogue.addActionListener(e -> mainWindow.switchTo("catalogue"));
+
         boutonConnexion.addActionListener(e -> mainWindow.switchTo("connexion"));
-        boutonPanier.addActionListener(e -> mainWindow.switchTo("panier"));
+
+        boutonPanier.addActionListener(e -> {
+            Utilisateur u = mainWindow.getUtilisateurConnecte();
+            if (u != null) {
+                mainWindow.switchTo("panier");
+            } else {
+                JOptionPane.showMessageDialog(mainWindow, "Veuillez vous connecter pour accéder au panier.");
+                mainWindow.switchTo("connexion");
+            }
+        });
+
         boutonHistorique.addActionListener(e -> {
             Utilisateur u = mainWindow.getUtilisateurConnecte();
             VueHistoriqueFactures vueHisto = new VueHistoriqueFactures(u, mainWindow);
             mainWindow.ajouterVue("historique", vueHisto);
             mainWindow.switchTo("historique");
         });
+
         boutonDeconnexion.addActionListener(e -> {
             mainWindow.setUtilisateurConnecte(null);
             JOptionPane.showMessageDialog(mainWindow, "Déconnexion réussie.");
             mainWindow.switchTo("accueil");
         });
 
-        // --- Mise à jour dynamique ---
         mettreAJourAffichage();
     }
 
     public void mettreAJourAffichage() {
         Utilisateur u = mainWindow.getUtilisateurConnecte();
-
         boolean connecte = (u != null);
         bienvenueLabel.setText(connecte ? "Bonjour " + u.getNom() + " !" : "Bienvenue, invité !");
 
         boutonConnexion.setVisible(!connecte);
         boutonHistorique.setVisible(connecte);
-        boutonPanier.setVisible(connecte);
+        boutonPanier.setVisible(true);
         boutonDeconnexion.setVisible(connecte);
     }
 }

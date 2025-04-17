@@ -26,16 +26,21 @@ public class MainWindow extends JFrame {
         cardLayout = new CardLayout();
         mainPanel = new JPanel(cardLayout);
 
-        // Vues disponibles dès le démarrage
+        // Vues accessibles dès le démarrage
         ajouterVue("connexion", new ConnexionView(this));
         ajouterVue("accueil", new VueAccueil(this));
         ajouterVue("panier", new VuePanier(this));
         ajouterVue("inscription", new VueInscription(this));
+        ajouterVue("accueilClient", new VueAccueil(this));
+        ajouterVue("accueilAdmin", new VueAccueilAdmin(this));
+        ajouterVue("historique", new VueHistoriqueCommandes(this));
+        ajouterVue("stats", new VueStatistiques(this));
 
-        // Ajoute par défaut la vue catalogue sans utilisateur connecté
+
+        // Préchargement du catalogue
         chargerCatalogue();
 
-        // Vue d’accueil par défaut
+        // Affichage de la première vue
         setContentPane(mainPanel);
         cardLayout.show(mainPanel, "accueil");
 
@@ -63,7 +68,6 @@ public class MainWindow extends JFrame {
             System.err.println("Vue inconnue : " + viewName);
             return;
         }
-        cardLayout.show(mainPanel, viewName);
 
         if ("accueil".equals(viewName)) {
             VueAccueil accueil = (VueAccueil) vues.get("accueil");
@@ -74,6 +78,12 @@ public class MainWindow extends JFrame {
             VuePanier vp = (VuePanier) vues.get("panier");
             vp.rafraichir();
         }
+
+        if ("catalogue".equals(viewName)) {
+            chargerCatalogue(); // sécurise l’accès
+        }
+
+        cardLayout.show(mainPanel, viewName);
     }
 
     public Panier getPanier() {

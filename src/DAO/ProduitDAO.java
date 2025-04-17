@@ -6,14 +6,11 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * DAO pour gérer les opérations sur les produits.
- */
 public class ProduitDAO {
 
-    // Ajouter un produit à la base de données
+    // Ajouter un produit avec image
     public boolean ajouterProduit(Produit produit) {
-        String sql = "INSERT INTO produit (nom, prix, quantiteStock) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO produit (nom, prix, quantiteStock, image) VALUES (?, ?, ?, ?)";
 
         try (Connection conn = ConnexionBD.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -21,6 +18,7 @@ public class ProduitDAO {
             stmt.setString(1, produit.getNom());
             stmt.setDouble(2, produit.getPrix());
             stmt.setInt(3, produit.getQuantiteStock());
+            stmt.setString(4, produit.getImage()); // ✅ image
 
             int lignes = stmt.executeUpdate();
             return lignes > 0;
@@ -31,7 +29,7 @@ public class ProduitDAO {
         }
     }
 
-    // ✅ Renommé pour correspondre à VueProduits
+    // Lister tous les produits
     public List<Produit> listerProduits() {
         List<Produit> produits = new ArrayList<>();
         String sql = "SELECT * FROM produit";
@@ -45,7 +43,8 @@ public class ProduitDAO {
                         rs.getInt("id"),
                         rs.getString("nom"),
                         rs.getDouble("prix"),
-                        rs.getInt("quantiteStock")
+                        rs.getInt("quantiteStock"),
+                        rs.getString("image") // ✅ image chargée
                 );
                 produits.add(p);
             }
@@ -57,8 +56,9 @@ public class ProduitDAO {
         return produits;
     }
 
+    // Modifier un produit (avec image)
     public boolean modifierProduit(Produit produit) {
-        String sql = "UPDATE produit SET nom = ?, prix = ?, quantiteStock = ? WHERE id = ?";
+        String sql = "UPDATE produit SET nom = ?, prix = ?, quantiteStock = ?, image = ? WHERE id = ?";
 
         try (Connection conn = ConnexionBD.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -66,7 +66,8 @@ public class ProduitDAO {
             stmt.setString(1, produit.getNom());
             stmt.setDouble(2, produit.getPrix());
             stmt.setInt(3, produit.getQuantiteStock());
-            stmt.setInt(4, produit.getId());
+            stmt.setString(4, produit.getImage()); // ✅ image
+            stmt.setInt(5, produit.getId());
 
             int lignes = stmt.executeUpdate();
             return lignes > 0;
@@ -77,6 +78,7 @@ public class ProduitDAO {
         }
     }
 
+    // Supprimer un produit
     public boolean supprimerProduit(int idProduit) {
         String sql = "DELETE FROM produit WHERE id = ?";
 

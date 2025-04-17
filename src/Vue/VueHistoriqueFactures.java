@@ -20,7 +20,6 @@ public class VueHistoriqueFactures extends JPanel {
     private Utilisateur utilisateur;
     private JButton boutonVoirDetail;
     private JCheckBox checkBox2025;
-    private JButton boutonAccueil;
     private JComboBox<String> triComboBox;
     private FactureDAO dao;
     private MainWindow mainWindow;
@@ -32,30 +31,29 @@ public class VueHistoriqueFactures extends JPanel {
 
         setLayout(new BorderLayout());
 
-        tableFactures = new JTable();
+        // ✅ Barre supérieure avec logo + nom utilisateur
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
 
-        // --- Panneau du haut avec filtre, tri et bouton accueil ---
+        // --- Panneau du haut avec filtre et tri ---
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         checkBox2025 = new JCheckBox("Afficher uniquement 2025");
-        boutonAccueil = new JButton("Revenir à l’accueil");
         triComboBox = new JComboBox<>(new String[]{
                 "Aucun tri", "Tri par Montant croissant", "Tri par Date décroissante"
         });
 
         topPanel.add(checkBox2025);
         topPanel.add(triComboBox);
-        topPanel.add(boutonAccueil);
         add(topPanel, BorderLayout.NORTH);
 
         // Listeners
         checkBox2025.addActionListener(e -> rechargerFactures());
         triComboBox.addActionListener(e -> rechargerFactures());
-        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
 
         // --- Tableau central ---
+        tableFactures = new JTable();
         add(new JScrollPane(tableFactures), BorderLayout.CENTER);
 
-        // --- Bouton de détail ---
+        // --- Bouton de détail en bas ---
         boutonVoirDetail = new JButton("Voir les détails");
         boutonVoirDetail.addActionListener(e -> ouvrirDetail());
         add(boutonVoirDetail, BorderLayout.SOUTH);

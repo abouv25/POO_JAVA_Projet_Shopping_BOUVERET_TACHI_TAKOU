@@ -1,0 +1,21 @@
+-- 📄 Insertion de factures fictives avec IDs valides
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-03-18 16:37:22', 67.41);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-04-16 16:37:22', 111.55);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-03-26 16:37:22', 138.69);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-03-24 16:37:22', 74.17);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-03-30 16:37:22', 165.38);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-04-16 16:37:22', 32.37);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-04-03 16:37:22', 231.09);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-04-12 16:37:22', 175.18);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-03-27 16:37:22', 96.58);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-03-31 16:37:22', 59.35);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-03-22 16:37:22', 171.53);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-04-11 16:37:22', 149.9);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-04-01 16:37:22', 27.09);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-03-21 16:37:22', 149.43);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-04-12 16:37:22', 181.22);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-03-27 16:37:22', 86.7);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-04-03 16:37:22', 72.76);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-03-24 16:37:22', 56.64);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (1, '2025-03-30 16:37:22', 117.39);
+INSERT INTO facture (utilisateur_id, dateFacture, total) VALUES (2, '2025-03-18 16:37:22', 103.45);

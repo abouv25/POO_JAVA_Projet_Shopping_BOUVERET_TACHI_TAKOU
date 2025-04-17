@@ -21,7 +21,6 @@ public class VueDetailFacture extends JPanel {
     private JTable tableLignes;
     private JLabel labelTotal;
     private JButton boutonExporter;
-    private JButton boutonAccueil;
     private Utilisateur utilisateur;
     private MainWindow mainWindow;
 
@@ -31,30 +30,31 @@ public class VueDetailFacture extends JPanel {
 
         setLayout(new BorderLayout());
 
+        // ✅ Barre du haut avec logo et utilisateur
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
+
+        // --- Tableau central ---
         tableLignes = new JTable();
-        labelTotal = new JLabel("Total : ");
-        boutonExporter = new JButton("Exporter en PDF");
-        boutonAccueil = new JButton("Accueil");
+        add(new JScrollPane(tableLignes), BorderLayout.CENTER);
 
-        // --- Bas de page avec Accueil à gauche et Export à droite ---
+        // --- Bas : total + bouton exporter ---
         JPanel bas = new JPanel(new BorderLayout());
-        JPanel gauche = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT));
 
-        gauche.add(boutonAccueil);
+        labelTotal = new JLabel("Total : ");
+        labelTotal.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+
+        boutonExporter = new JButton("Exporter en PDF");
+
+        JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         droite.add(labelTotal);
         droite.add(boutonExporter);
 
-        bas.add(gauche, BorderLayout.WEST);
         bas.add(droite, BorderLayout.EAST);
-
-        add(new JScrollPane(tableLignes), BorderLayout.CENTER);
         add(bas, BorderLayout.SOUTH);
 
         chargerLignes(idFacture);
 
         boutonExporter.addActionListener(e -> exporterPDF(idFacture));
-        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
     }
 
     private void chargerLignes(int idFacture) {
@@ -108,12 +108,9 @@ public class VueDetailFacture extends JPanel {
             doc.add(logo);
 
             doc.add(new Paragraph(" "));
-
-            com.lowagie.text.Font titreFont = new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 16, com.lowagie.text.Font.BOLD);
-            Paragraph titre = new Paragraph("FACTURE", titreFont);
+            Paragraph titre = new Paragraph("FACTURE", new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 16, com.lowagie.text.Font.BOLD));
             titre.setAlignment(Element.ALIGN_CENTER);
             doc.add(titre);
-
             doc.add(new Paragraph(" "));
 
             doc.add(new Paragraph("Numéro de facture : " + idFacture));
@@ -143,8 +140,7 @@ public class VueDetailFacture extends JPanel {
             doc.add(new Paragraph("Total à payer : " + String.format("%.2f", total) + " €"));
 
             doc.add(new Paragraph(" "));
-            com.lowagie.text.Font merciFont = new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 14, com.lowagie.text.Font.ITALIC);
-            Paragraph merci = new Paragraph("Merci de votre commande !", merciFont);
+            Paragraph merci = new Paragraph("Merci de votre commande !", new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 14, com.lowagie.text.Font.ITALIC));
             merci.setAlignment(Element.ALIGN_CENTER);
             doc.add(merci);
 

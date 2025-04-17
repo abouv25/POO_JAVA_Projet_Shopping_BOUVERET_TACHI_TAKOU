@@ -38,7 +38,8 @@ public class ConnexionView extends JPanel {
                 String password = new String(passwordField.getPassword());
 
                 UtilisateurDAO dao = new UtilisateurDAO();
-                Utilisateur utilisateur = dao.trouverParEmailEtMotDePasse(email, password);
+
+                Utilisateur utilisateur = dao.verifierConnexion(email, password);
 
                 if (utilisateur != null) {
                     JOptionPane.showMessageDialog(mainWindow, "Connexion réussie !");

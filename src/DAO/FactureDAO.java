@@ -3,8 +3,8 @@ package DAO;
 import modele.*;
 
 import java.sql.*;
-import java.util.ArrayList;
-import java.util.List;
+import java.sql.Date;
+import java.util.*;
 
 public class FactureDAO {
 
@@ -12,59 +12,43 @@ public class FactureDAO {
         String sqlFacture = "INSERT INTO facture (id_utilisateur, date_facture, montant_total) VALUES (?, ?, ?)";
         String sqlLigneFacture = "INSERT INTO ligne_facture (id_facture, id_produit, quantite, prix_unitaire) VALUES (?, ?, ?, ?)";
 
-        Connection conn = null;
-        PreparedStatement stmtFacture = null;
-        PreparedStatement stmtLigne = null;
-        ResultSet generatedKeys = null;
+        try (Connection conn = ConnexionBD.getConnection()) {
+            conn.setAutoCommit(false);
 
-        try {
-            conn = ConnexionBD.getConnection();
-            conn.setAutoCommit(false); // Démarre la transaction
+            try (PreparedStatement stmtFacture = conn.prepareStatement(sqlFacture, Statement.RETURN_GENERATED_KEYS)) {
+                stmtFacture.setInt(1, f.getClient().getId());
+                stmtFacture.setDate(2, Date.valueOf(f.getDate()));
+                stmtFacture.setDouble(3, f.getMontantTotal());
+                stmtFacture.executeUpdate();
 
-            // 1. Insérer la facture
-            stmtFacture = conn.prepareStatement(sqlFacture, Statement.RETURN_GENERATED_KEYS);
-            stmtFacture.setInt(1, f.getClient().getId());
-            stmtFacture.setDate(2, Date.valueOf(f.getDate()));
-            stmtFacture.setDouble(3, f.getMontantTotal());
-            stmtFacture.executeUpdate();
+                ResultSet generatedKeys = stmtFacture.getGeneratedKeys();
+                if (!generatedKeys.next()) throw new SQLException("Échec génération ID facture.");
+                int idFacture = generatedKeys.getInt(1);
+                f.setId(idFacture);
 
-            generatedKeys = stmtFacture.getGeneratedKeys();
-            if (!generatedKeys.next()) throw new SQLException("Échec de la génération de l’ID de facture.");
-            int idFacture = generatedKeys.getInt(1);
-            f.setId(idFacture);
+                try (PreparedStatement stmtLigne = conn.prepareStatement(sqlLigneFacture)) {
+                    for (LignePanier ligne : f.getLignes()) {
+                        stmtLigne.setInt(1, idFacture);
+                        stmtLigne.setInt(2, ligne.getIdProduit());
+                        stmtLigne.setInt(3, ligne.getQuantite());
+                        stmtLigne.setDouble(4, ligne.getPrix());
+                        stmtLigne.addBatch();
+                    }
+                    stmtLigne.executeBatch();
+                }
 
-            // 2. Insérer les lignes de facture
-            stmtLigne = conn.prepareStatement(sqlLigneFacture);
-            for (LignePanier ligne : f.getLignes()) {
-                stmtLigne.setInt(1, idFacture);
-                stmtLigne.setInt(2, ligne.getIdProduit());
-                stmtLigne.setInt(3, ligne.getQuantite());
-                stmtLigne.setDouble(4, ligne.getPrix());
-                stmtLigne.addBatch();
+                conn.commit();
+                return true;
+
+            } catch (SQLException e) {
+                conn.rollback();
+                System.err.println("Erreur enregistrement facture : " + e.getMessage());
+                return false;
             }
-            stmtLigne.executeBatch();
-
-            conn.commit();
-            return true;
 
         } catch (SQLException e) {
-            System.err.println("Erreur lors de l'enregistrement de la facture : " + e.getMessage());
-            try {
-                if (conn != null) conn.rollback();
-            } catch (SQLException ex) {
-                System.err.println("Erreur lors du rollback : " + ex.getMessage());
-            }
+            System.err.println("Erreur connexion ou rollback : " + e.getMessage());
             return false;
-
-        } finally {
-            try {
-                if (stmtFacture != null) stmtFacture.close();
-                if (stmtLigne != null) stmtLigne.close();
-                if (generatedKeys != null) generatedKeys.close();
-                if (conn != null) conn.setAutoCommit(true);
-            } catch (SQLException e) {
-                System.err.println("Erreur lors de la fermeture des ressources : " + e.getMessage());
-            }
         }
     }
 
@@ -79,18 +63,17 @@ public class FactureDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                Facture f = new Facture(
+                factures.add(new Facture(
                         rs.getInt("id"),
                         u,
                         rs.getDate("date_facture").toLocalDate(),
                         rs.getDouble("montant_total"),
                         u.isClientFidele() ? 10.0 : 0.0
-                );
-                factures.add(f);
+                ));
             }
 
         } catch (SQLException e) {
-            System.err.println("Erreur lors de la récupération des factures : " + e.getMessage());
+            System.err.println("Erreur récupération factures : " + e.getMessage());
         }
 
         return factures;
@@ -112,19 +95,174 @@ public class FactureDAO {
             ResultSet rs = stmt.executeQuery();
 
             while (rs.next()) {
-                LignePanier ligne = new LignePanier(
+                lignes.add(new LignePanier(
                         rs.getInt("id"),
                         rs.getString("nom"),
                         rs.getDouble("prix"),
                         rs.getInt("quantite")
-                );
-                lignes.add(ligne);
+                ));
             }
 
         } catch (SQLException e) {
-            System.err.println("Erreur lors de la récupération des lignes de la facture : " + e.getMessage());
+            System.err.println("Erreur récupération lignes facture : " + e.getMessage());
         }
 
         return lignes;
+    }
+
+    // === STATISTIQUES GLOBALES ===
+
+    public Map<String, Double> totalVentesParDate() {
+        Map<String, Double> map = new TreeMap<>();
+        String sql = "SELECT DATE(date_facture) AS jour, SUM(montant_total) AS totalJour FROM facture GROUP BY jour ORDER BY jour";
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                map.put(rs.getString("jour"), rs.getDouble("totalJour"));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur stats par date : " + e.getMessage());
+        }
+
+        return map;
+    }
+
+    public Map<String, Double> totalVentesParUtilisateur() {
+        Map<String, Double> map = new TreeMap<>();
+        String sql = """
+            SELECT u.nom, SUM(f.montant_total) AS totalVentes
+            FROM facture f
+            JOIN utilisateur u ON f.id_utilisateur = u.id
+            GROUP BY u.nom ORDER BY totalVentes DESC
+        """;
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                map.put(rs.getString("nom"), rs.getDouble("totalVentes"));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur stats utilisateur : " + e.getMessage());
+        }
+
+        return map;
+    }
+
+    public Map<String, Double> totalVentesParProduit() {
+        Map<String, Double> map = new TreeMap<>();
+        String sql = """
+            SELECT p.nom, SUM(lf.quantite * lf.prix_unitaire) AS totalVente
+            FROM ligne_facture lf
+            JOIN produit p ON p.id = lf.id_produit
+            JOIN facture f ON f.id = lf.id_facture
+            GROUP BY p.nom ORDER BY totalVente DESC
+        """;
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql);
+             ResultSet rs = stmt.executeQuery()) {
+
+            while (rs.next()) {
+                map.put(rs.getString("nom"), rs.getDouble("totalVente"));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur stats produit : " + e.getMessage());
+        }
+
+        return map;
+    }
+
+    // === STATISTIQUES FILTRÉES (ANNEE + MOIS) ===
+
+    public Map<String, Double> totalVentesParDate(int annee, int mois) {
+        Map<String, Double> map = new TreeMap<>();
+        String sql = """
+            SELECT DATE(date_facture) AS jour, SUM(montant_total) AS totalJour
+            FROM facture
+            WHERE YEAR(date_facture) = ? AND MONTH(date_facture) = ?
+            GROUP BY jour ORDER BY jour
+        """;
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, annee);
+            stmt.setInt(2, mois);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                map.put(rs.getString("jour"), rs.getDouble("totalJour"));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur stats date (filtrée) : " + e.getMessage());
+        }
+
+        return map;
+    }
+
+    public Map<String, Double> totalVentesParUtilisateur(int annee, int mois) {
+        Map<String, Double> map = new TreeMap<>();
+        String sql = """
+            SELECT u.nom, SUM(f.montant_total) AS totalVentes
+            FROM facture f
+            JOIN utilisateur u ON f.id_utilisateur = u.id
+            WHERE YEAR(f.date_facture) = ? AND MONTH(f.date_facture) = ?
+            GROUP BY u.nom ORDER BY totalVentes DESC
+        """;
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, annee);
+            stmt.setInt(2, mois);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                map.put(rs.getString("nom"), rs.getDouble("totalVentes"));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur stats utilisateur (filtrée) : " + e.getMessage());
+        }
+
+        return map;
+    }
+
+    public Map<String, Double> totalVentesParProduit(int annee, int mois) {
+        Map<String, Double> map = new TreeMap<>();
+        String sql = """
+            SELECT p.nom, SUM(lf.quantite * lf.prix_unitaire) AS totalVente
+            FROM ligne_facture lf
+            JOIN produit p ON p.id = lf.id_produit
+            JOIN facture f ON f.id = lf.id_facture
+            WHERE YEAR(f.date_facture) = ? AND MONTH(f.date_facture) = ?
+            GROUP BY p.nom ORDER BY totalVente DESC
+        """;
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, annee);
+            stmt.setInt(2, mois);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                map.put(rs.getString("nom"), rs.getDouble("totalVente"));
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur stats produit (filtrée) : " + e.getMessage());
+        }
+
+        return map;
     }
 }
