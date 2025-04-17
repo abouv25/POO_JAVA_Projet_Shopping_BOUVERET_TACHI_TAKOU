@@ -1,4 +1,4 @@
-package App;
+/*package App;
 
 import modele.Utilisateur;
 import Vue.VueDetailFacture;
@@ -15,4 +15,4 @@ public class MainExportPDFTest {
         SwingUtilities.invokeLater(() ->
                 new VueDetailFacture(idFacture, utilisateur).setVisible(true));
     }
-}
+}*/

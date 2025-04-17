@@ -15,7 +15,10 @@ public class ConnexionView extends JPanel {
     public ConnexionView(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
 
-        setLayout(new GridBagLayout());
+        setLayout(new BorderLayout());
+
+        // --- Partie centrale avec GridBagLayout pour le formulaire ---
+        JPanel centre = new JPanel(new GridBagLayout());
         GridBagConstraints gbc = new GridBagConstraints();
 
         JLabel title = new JLabel("Connexion");
@@ -35,12 +38,17 @@ public class ConnexionView extends JPanel {
                 String password = new String(passwordField.getPassword());
 
                 UtilisateurDAO dao = new UtilisateurDAO();
-                Utilisateur utilisateur = dao.verifierConnexion(email, password);
+                Utilisateur utilisateur = dao.trouverParEmailEtMotDePasse(email, password);
 
                 if (utilisateur != null) {
                     JOptionPane.showMessageDialog(mainWindow, "Connexion réussie !");
-                    mainWindow.setUtilisateurConnecte(utilisateur); // à créer si pas encore fait
-                    mainWindow.switchTo("catalogue"); // vue produits à créer
+                    mainWindow.setUtilisateurConnecte(utilisateur);
+
+                    // ✅ Ajout dynamique de VueProduits
+                    VueProduits vueProduits = new VueProduits(mainWindow, utilisateur);
+                    mainWindow.ajouterVue("catalogue", vueProduits);
+
+                    mainWindow.switchTo("catalogue");
                 } else {
                     JOptionPane.showMessageDialog(mainWindow, "Identifiants incorrects.");
                 }
@@ -49,20 +57,30 @@ public class ConnexionView extends JPanel {
 
         gbc.insets = new Insets(10, 10, 10, 10);
         gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        add(title, gbc);
+        centre.add(title, gbc);
 
         gbc.gridwidth = 1;
         gbc.gridy++;
-        add(emailLabel, gbc);
+        centre.add(emailLabel, gbc);
         gbc.gridx = 1;
-        add(emailField, gbc);
+        centre.add(emailField, gbc);
 
         gbc.gridx = 0; gbc.gridy++;
-        add(passwordLabel, gbc);
+        centre.add(passwordLabel, gbc);
         gbc.gridx = 1;
-        add(passwordField, gbc);
+        centre.add(passwordField, gbc);
 
         gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2;
-        add(loginButton, gbc);
+        centre.add(loginButton, gbc);
+
+        add(centre, BorderLayout.CENTER);
+
+        // --- Bas : bouton accueil ---
+        JPanel bas = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JButton boutonAccueil = new JButton("Accueil");
+        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
+        bas.add(boutonAccueil);
+
+        add(bas, BorderLayout.SOUTH);
     }
 }

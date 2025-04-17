@@ -31,8 +31,8 @@ public class ProduitDAO {
         }
     }
 
-    // Récupérer tous les produits depuis la base de données
-    public List<Produit> getTousLesProduits() {
+    // ✅ Renommé pour correspondre à VueProduits
+    public List<Produit> listerProduits() {
         List<Produit> produits = new ArrayList<>();
         String sql = "SELECT * FROM produit";
 
@@ -57,7 +57,6 @@ public class ProduitDAO {
         return produits;
     }
 
-    // Mettre à jour un produit existant
     public boolean modifierProduit(Produit produit) {
         String sql = "UPDATE produit SET nom = ?, prix = ?, quantiteStock = ? WHERE id = ?";
 
@@ -78,7 +77,6 @@ public class ProduitDAO {
         }
     }
 
-    // Supprimer un produit de la base de données
     public boolean supprimerProduit(int idProduit) {
         String sql = "DELETE FROM produit WHERE id = ?";
 

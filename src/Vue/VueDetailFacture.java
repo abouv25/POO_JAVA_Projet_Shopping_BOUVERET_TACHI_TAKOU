@@ -16,29 +16,37 @@ import com.lowagie.text.Paragraph;
 import com.lowagie.text.pdf.PdfPTable;
 import com.lowagie.text.pdf.PdfWriter;
 
-public class VueDetailFacture extends JFrame {
+public class VueDetailFacture extends JPanel {
 
     private JTable tableLignes;
     private JLabel labelTotal;
     private JButton boutonExporter;
+    private JButton boutonAccueil;
     private Utilisateur utilisateur;
+    private MainWindow mainWindow;
 
-    public VueDetailFacture(int idFacture, Utilisateur utilisateur) {
+    public VueDetailFacture(int idFacture, Utilisateur utilisateur, MainWindow mainWindow) {
         this.utilisateur = utilisateur;
+        this.mainWindow = mainWindow;
 
-        setTitle("Détails de la facture #" + idFacture);
-        setSize(600, 400);
-        setLocationRelativeTo(null);
         setLayout(new BorderLayout());
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
 
         tableLignes = new JTable();
         labelTotal = new JLabel("Total : ");
         boutonExporter = new JButton("Exporter en PDF");
+        boutonAccueil = new JButton("Accueil");
 
+        // --- Bas de page avec Accueil à gauche et Export à droite ---
         JPanel bas = new JPanel(new BorderLayout());
-        bas.add(labelTotal, BorderLayout.WEST);
-        bas.add(boutonExporter, BorderLayout.EAST);
+        JPanel gauche = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+
+        gauche.add(boutonAccueil);
+        droite.add(labelTotal);
+        droite.add(boutonExporter);
+
+        bas.add(gauche, BorderLayout.WEST);
+        bas.add(droite, BorderLayout.EAST);
 
         add(new JScrollPane(tableLignes), BorderLayout.CENTER);
         add(bas, BorderLayout.SOUTH);
@@ -46,6 +54,7 @@ public class VueDetailFacture extends JFrame {
         chargerLignes(idFacture);
 
         boutonExporter.addActionListener(e -> exporterPDF(idFacture));
+        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
     }
 
     private void chargerLignes(int idFacture) {
@@ -130,7 +139,6 @@ public class VueDetailFacture extends JFrame {
             }
 
             doc.add(table);
-
             doc.add(new Paragraph(" "));
             doc.add(new Paragraph("Total à payer : " + String.format("%.2f", total) + " €"));
 

@@ -16,7 +16,7 @@ public class Main {
         System.out.println("Produit ajouté : " + ajoute);
 
         // Test : récupérer tous les produits
-        List<Produit> produits = produitDAO.getTousLesProduits();
+        List<Produit> produits = produitDAO.listerProduits();
         System.out.println("Liste des produits :");
         for (Produit p : produits) {
             System.out.println(p);

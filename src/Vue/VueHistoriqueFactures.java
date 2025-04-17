@@ -14,7 +14,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class VueHistoriqueFactures extends JFrame {
+public class VueHistoriqueFactures extends JPanel {
 
     private JTable tableFactures;
     private Utilisateur utilisateur;
@@ -23,15 +23,13 @@ public class VueHistoriqueFactures extends JFrame {
     private JButton boutonAccueil;
     private JComboBox<String> triComboBox;
     private FactureDAO dao;
+    private MainWindow mainWindow;
 
-    public VueHistoriqueFactures(Utilisateur utilisateur) {
+    public VueHistoriqueFactures(Utilisateur utilisateur, MainWindow mainWindow) {
         this.utilisateur = utilisateur;
+        this.mainWindow = mainWindow;
         this.dao = new FactureDAO();
 
-        setTitle("Historique des Factures");
-        setSize(750, 480);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
 
         tableFactures = new JTable();
@@ -52,10 +50,7 @@ public class VueHistoriqueFactures extends JFrame {
         // Listeners
         checkBox2025.addActionListener(e -> rechargerFactures());
         triComboBox.addActionListener(e -> rechargerFactures());
-        boutonAccueil.addActionListener(e -> {
-            this.dispose();
-            new VueAccueil().setVisible(true); // à adapter si besoin
-        });
+        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
 
         // --- Tableau central ---
         add(new JScrollPane(tableFactures), BorderLayout.CENTER);
@@ -133,6 +128,9 @@ public class VueHistoriqueFactures extends JFrame {
         }
 
         int idFacture = (int) tableFactures.getValueAt(row, 0);
-        new VueDetailFacture(idFacture, utilisateur).setVisible(true);
+
+        VueDetailFacture vueDetail = new VueDetailFacture(idFacture, utilisateur, mainWindow);
+        mainWindow.ajouterVue("detailFacture", vueDetail);
+        mainWindow.switchTo("detailFacture");
     }
 }

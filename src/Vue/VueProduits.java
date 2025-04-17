@@ -26,14 +26,13 @@ public class VueProduits extends JPanel {
 
         setLayout(new BorderLayout());
 
+        // --- Table des produits ---
         model = new DefaultTableModel(new Object[]{"ID", "Nom", "Prix (€)", "Stock"}, 0);
         tableProduits = new JTable(model);
         add(new JScrollPane(tableProduits), BorderLayout.CENTER);
 
-        chargerProduits();
-
-        // --- Panneau des boutons ---
-        JPanel bas = new JPanel(new FlowLayout());
+        // --- Bas : boutons ---
+        JPanel bas = new JPanel(new FlowLayout(FlowLayout.CENTER));
         boutonAjouterPanier = new JButton("Ajouter au panier");
         boutonVoirPanier = new JButton("Voir le panier");
         boutonAccueil = new JButton("Accueil");
@@ -43,22 +42,27 @@ public class VueProduits extends JPanel {
         bas.add(boutonAccueil);
         add(bas, BorderLayout.SOUTH);
 
+        // --- Listeners ---
         boutonAjouterPanier.addActionListener(this::ajouterAuPanier);
         boutonVoirPanier.addActionListener(e -> mainWindow.switchTo("panier"));
-        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil")); // à adapter
+        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
+
+        // --- Remplir les données ---
+        chargerProduits();
     }
 
     private void chargerProduits() {
         ProduitDAO dao = new ProduitDAO();
         List<Produit> produits = dao.listerProduits();
 
-        model.setRowCount(0);
+        model.setRowCount(0); // reset
+
         for (Produit p : produits) {
             model.addRow(new Object[]{
                     p.getId(),
                     p.getNom(),
                     String.format("%.2f", p.getPrix()),
-                    p.getStock()
+                    p.getQuantiteStock() // 🔁 correction ici
             });
         }
     }
@@ -81,7 +85,9 @@ public class VueProduits extends JPanel {
             int quantite = Integer.parseInt(input);
             if (quantite <= 0) throw new NumberFormatException();
 
-            // TODO : Ajouter réellement au panier via une classe Panier centralisée
+            // ✅ Ajout réel au panier
+            mainWindow.getPanier().ajouterProduit(idProduit, nom, prix, quantite);
+
             JOptionPane.showMessageDialog(this, quantite + " x " + nom + " ajouté(s) au panier.");
 
         } catch (NumberFormatException ex) {

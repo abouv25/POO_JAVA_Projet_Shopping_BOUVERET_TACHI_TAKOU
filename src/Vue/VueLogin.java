@@ -1,4 +1,4 @@
-package vue;
+package Vue;
 
 import javax.swing.*;
 import java.awt.*;
@@ -7,36 +7,43 @@ import java.awt.event.ActionListener;
 /**
  * Interface graphique de connexion utilisateur.
  */
-public class VueLogin extends JFrame {
+public class VueLogin extends JPanel {
 
     private JTextField champEmail;
     private JPasswordField champMotDePasse;
     private JButton boutonConnexion;
+    private JButton boutonAccueil;
+    private MainWindow mainWindow;
 
-    public VueLogin() {
-        setTitle("Connexion - Projet Shopping");
-        setSize(350, 200);
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null); // centre la fenêtre
+    public VueLogin(MainWindow mainWindow) {
+        this.mainWindow = mainWindow;
 
         champEmail = new JTextField(20);
         champMotDePasse = new JPasswordField(20);
         boutonConnexion = new JButton("Se connecter");
+        boutonAccueil = new JButton("Accueil");
 
-        // Mise en page
-        JPanel panel = new JPanel(new GridLayout(3, 2, 10, 10));
-        panel.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        // Formulaire
+        JPanel centre = new JPanel(new GridLayout(3, 2, 10, 10));
+        centre.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        centre.add(new JLabel("Email :"));
+        centre.add(champEmail);
+        centre.add(new JLabel("Mot de passe :"));
+        centre.add(champMotDePasse);
+        centre.add(new JLabel()); // vide
+        centre.add(boutonConnexion);
 
-        panel.add(new JLabel("Email :"));
-        panel.add(champEmail);
+        // Bas de l’écran avec bouton Accueil
+        JPanel bas = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bas.add(boutonAccueil);
 
-        panel.add(new JLabel("Mot de passe :"));
-        panel.add(champMotDePasse);
+        // Ajout au panneau principal
+        setLayout(new BorderLayout());
+        add(centre, BorderLayout.CENTER);
+        add(bas, BorderLayout.SOUTH);
 
-        panel.add(new JLabel()); // vide
-        panel.add(boutonConnexion);
-
-        add(panel);
+        // Action bouton accueil
+        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
     }
 
     public String getEmail() {
@@ -48,7 +55,7 @@ public class VueLogin extends JFrame {
     }
 
     public void afficherMessage(String message) {
-        JOptionPane.showMessageDialog(this, message);
+        JOptionPane.showMessageDialog(mainWindow, message);
     }
 
     public void ajouterListenerConnexion(ActionListener listener) {

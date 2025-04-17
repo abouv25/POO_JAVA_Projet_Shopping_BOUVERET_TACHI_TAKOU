@@ -1,4 +1,4 @@
-package App;
+/*package App;
 
 import modele.LignePanier;
 import modele.Utilisateur;
@@ -19,6 +19,6 @@ public class MainFactureTest {
         );
 
         // Lancer la fenêtre de facture
-        SwingUtilities.invokeLater(() -> new VueNouvelleFacture(utilisateur, panierSimule).setVisible(true));
+        SwingUtilities.invokeLater(() -> new VueNouvelleFacture(utilisateur,panierSimule).setVisible(true));
     }
-}
+}*/

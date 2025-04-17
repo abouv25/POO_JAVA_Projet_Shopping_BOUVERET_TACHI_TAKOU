@@ -10,18 +10,18 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.util.List;
 
-public class VueNouvelleFacture extends JFrame {
+public class VueNouvelleFacture extends JPanel {
 
     private JTable tableFacture;
     private JLabel labelTotal;
     private JLabel labelRemise;
     private JButton boutonConfirmer;
+    private JButton boutonAccueil;
+    private MainWindow mainWindow;
 
-    public VueNouvelleFacture(Utilisateur utilisateur, List<LignePanier> lignes) {
-        setTitle("Facture");
-        setSize(600, 400);
-        setLocationRelativeTo(null);
-        setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+    public VueNouvelleFacture(MainWindow mainWindow, Utilisateur utilisateur, List<LignePanier> lignes) {
+        this.mainWindow = mainWindow;
+
         setLayout(new BorderLayout());
 
         // Table
@@ -29,15 +29,23 @@ public class VueNouvelleFacture extends JFrame {
         chargerLignes(lignes);
         add(new JScrollPane(tableFacture), BorderLayout.CENTER);
 
-        // Bas de fenêtre : Total + Remise + Bouton
-        JPanel bas = new JPanel(new GridLayout(3, 1));
+        // Bas de fenêtre : Total + Remise + Boutons
+        JPanel bas = new JPanel(new BorderLayout());
+
+        JPanel infos = new JPanel(new GridLayout(2, 1));
         labelRemise = new JLabel();
         labelTotal = new JLabel();
-        boutonConfirmer = new JButton("Confirmer la commande");
+        infos.add(labelRemise);
+        infos.add(labelTotal);
 
-        bas.add(labelRemise);
-        bas.add(labelTotal);
-        bas.add(boutonConfirmer);
+        JPanel boutons = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        boutonConfirmer = new JButton("Confirmer la commande");
+        boutonAccueil = new JButton("Accueil");
+        boutons.add(boutonAccueil);
+        boutons.add(boutonConfirmer);
+
+        bas.add(infos, BorderLayout.WEST);
+        bas.add(boutons, BorderLayout.EAST);
 
         add(bas, BorderLayout.SOUTH);
 
@@ -56,12 +64,14 @@ public class VueNouvelleFacture extends JFrame {
             boolean ok = dao.ajouterFacture(facture);
 
             if (ok) {
-                JOptionPane.showMessageDialog(this, "Facture enregistrée avec succès !");
-                dispose(); // Ferme la fenêtre
+                JOptionPane.showMessageDialog(mainWindow, "Facture enregistrée avec succès !");
+                mainWindow.switchTo("accueil");
             } else {
-                JOptionPane.showMessageDialog(this, "Erreur lors de l'enregistrement.");
+                JOptionPane.showMessageDialog(mainWindow, "Erreur lors de l'enregistrement.");
             }
         });
+
+        boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
     }
 
     private void chargerLignes(List<LignePanier> lignes) {
@@ -78,17 +88,5 @@ public class VueNouvelleFacture extends JFrame {
         }
 
         tableFacture.setModel(model);
-    }
-
-    public static void main(String[] args) {
-        // Exemple de test : créer un utilisateur factice et quelques lignes
-        Utilisateur user = new Utilisateur(1, "Antoine", "a@mail.com", "1234", true);
-
-        List<LignePanier> lignes = List.of(
-                new LignePanier(1, "T-shirt", 15.0, 2),
-                new LignePanier(2, "Casquette", 12.5, 1)
-        );
-
-        SwingUtilities.invokeLater(() -> new VueNouvelleFacture(user, lignes).setVisible(true));
     }
 }

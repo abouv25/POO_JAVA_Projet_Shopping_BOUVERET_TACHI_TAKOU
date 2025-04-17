@@ -52,6 +52,11 @@ public class Produit {
         this.quantiteStock = quantiteStock;
     }
 
+    // ✅ Ajout pour compatibilité avec VueProduits
+    public int getStock() {
+        return getQuantiteStock();
+    }
+
     @Override
     public String toString() {
         return nom + " (" + prix + " €)";
