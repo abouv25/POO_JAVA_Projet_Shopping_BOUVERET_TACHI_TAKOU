@@ -99,6 +99,34 @@ public class ProduitDAO {
             return false;
         }
     }
+    public List<Produit> getProduitsAleatoires(int n) {
+        List<Produit> produits = new ArrayList<>();
+        String sql = "SELECT * FROM produit ORDER BY RAND() LIMIT ?";
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setInt(1, n);
+            ResultSet rs = stmt.executeQuery();
+
+            while (rs.next()) {
+                Produit p = new Produit(
+                        rs.getInt("id"),
+                        rs.getString("nom"),
+                        rs.getDouble("prix"),
+                        rs.getInt("quantiteStock"),
+                        rs.getString("image")
+                );
+                produits.add(p);
+            }
+
+        } catch (SQLException e) {
+            System.err.println("Erreur récupération produits aléatoires : " + e.getMessage());
+        }
+
+        return produits;
+    }
+
 
     // Supprimer un produit
     public boolean supprimerProduit(int idProduit) {

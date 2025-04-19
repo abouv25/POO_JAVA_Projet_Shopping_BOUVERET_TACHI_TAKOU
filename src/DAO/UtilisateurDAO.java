@@ -126,4 +126,22 @@ public class UtilisateurDAO {
 
         return liste;
     }
+
+    // ✅ Modifier le mot de passe à partir de l'email
+    public boolean modifierMotDePasse(String email, String nouveauMDP) {
+        String sql = "UPDATE utilisateur SET motDePasse = ? WHERE email = ?";
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+
+            stmt.setString(1, nouveauMDP);
+            stmt.setString(2, email);
+
+            return stmt.executeUpdate() > 0;
+
+        } catch (SQLException e) {
+            System.err.println("Erreur modification mot de passe : " + e.getMessage());
+            return false;
+        }
+    }
 }

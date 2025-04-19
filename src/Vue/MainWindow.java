@@ -7,6 +7,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Stack;
 
 public class MainWindow extends JFrame {
 
@@ -16,6 +17,9 @@ public class MainWindow extends JFrame {
     private Panier panier = new Panier();
 
     private Map<String, JPanel> vues = new HashMap<>();
+    // Historique des vues pour le bouton « page précédente »
+    private Stack<String> historiqueVues = new Stack<>();
+    private String vueActuelle;
 
     public MainWindow() {
         setTitle("Application Shopping");
@@ -35,24 +39,24 @@ public class MainWindow extends JFrame {
         ajouterVue("accueilAdmin", new VueAccueilAdmin(this));
         ajouterVue("historique", new VueHistoriqueCommandes(this));
         ajouterVue("stats", new VueStatistiques(this));
-
+        ajouterVue("motdepasseoublie", new VueMotDePasseOublie(this));
 
         // Préchargement du catalogue
         chargerCatalogue();
 
         // Affichage de la première vue
         setContentPane(mainPanel);
-        cardLayout.show(mainPanel, "accueil");
+        switchTo("accueil");
 
         setVisible(true);
     }
+
     public void chargerVueGestionUtilisateurs() {
         if (!vues.containsKey("gestionUtilisateurs")) {
             VueGestionUtilisateurs vue = new VueGestionUtilisateurs(this);
             ajouterVue("gestionUtilisateurs", vue);
         }
     }
-
 
     // Ajouter une vue dynamiquement
     public void ajouterVue(String nom, JPanel vue) {
@@ -76,6 +80,12 @@ public class MainWindow extends JFrame {
             return;
         }
 
+        if (vueActuelle != null && !vueActuelle.equals(viewName)) {
+            historiqueVues.push(vueActuelle);
+        }
+        vueActuelle = viewName;
+        cardLayout.show(mainPanel, viewName);
+
         if ("accueil".equals(viewName)) {
             VueAccueil accueil = (VueAccueil) vues.get("accueil");
             accueil.mettreAJourAffichage();
@@ -87,10 +97,17 @@ public class MainWindow extends JFrame {
         }
 
         if ("catalogue".equals(viewName)) {
-            chargerCatalogue(); // sécurise l’accès
+            chargerCatalogue();
         }
+    }
 
-        cardLayout.show(mainPanel, viewName);
+    /** Passe à la vue précédente, si elle existe dans l’historique */
+    public void retourPagePrecedente() {
+        if (!historiqueVues.isEmpty()) {
+            String precedente = historiqueVues.pop();
+            vueActuelle = precedente;
+            cardLayout.show(mainPanel, precedente);
+        }
     }
 
     public Panier getPanier() {

@@ -21,6 +21,7 @@ public class VueDetailFacture extends JPanel {
     private JTable tableLignes;
     private JLabel labelTotal;
     private JButton boutonExporter;
+    private JButton boutonRetour;
     private Utilisateur utilisateur;
     private MainWindow mainWindow;
 
@@ -28,6 +29,8 @@ public class VueDetailFacture extends JPanel {
         this.utilisateur = utilisateur;
         this.mainWindow = mainWindow;
 
+        // Appliquer style global
+        StyleUI.appliquerFondEtCadre(this);
         setLayout(new BorderLayout());
 
         // ✅ Barre du haut avec logo et utilisateur
@@ -37,16 +40,25 @@ public class VueDetailFacture extends JPanel {
         tableLignes = new JTable();
         add(new JScrollPane(tableLignes), BorderLayout.CENTER);
 
-        // --- Bas : total + bouton exporter ---
+        // --- Bas : retour + total + bouton exporter ---
         JPanel bas = new JPanel(new BorderLayout());
+        bas.setBackground(getBackground());
+
+        // Bouton Retour
+        boutonRetour = new JButton("⬅️ Retour");
+        StyleUI.styliserBouton(boutonRetour);
+        boutonRetour.addActionListener(e -> mainWindow.retourPagePrecedente());
+        bas.add(boutonRetour, BorderLayout.WEST);
+
+        // Total + Export
+        JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        droite.setOpaque(false);
 
         labelTotal = new JLabel("Total : ");
-        labelTotal.setBorder(BorderFactory.createEmptyBorder(0, 10, 0, 0));
+        droite.add(labelTotal);
 
         boutonExporter = new JButton("Exporter en PDF");
-
-        JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        droite.add(labelTotal);
+        StyleUI.styliserBouton(boutonExporter);
         droite.add(boutonExporter);
 
         bas.add(droite, BorderLayout.EAST);
@@ -69,9 +81,9 @@ public class VueDetailFacture extends JPanel {
             double sousTotal = l.getPrix() * l.getQuantite();
             model.addRow(new Object[]{
                     l.getNomProduit(),
-                    String.format("%.2f", l.getPrix()) + " €",
+                    String.format("%.2f €", l.getPrix()),
                     l.getQuantite(),
-                    String.format("%.2f", sousTotal) + " €"
+                    String.format("%.2f €", sousTotal)
             });
             total += sousTotal;
         }
@@ -103,12 +115,11 @@ public class VueDetailFacture extends JPanel {
             doc.open();
 
             com.lowagie.text.Font logoFont = new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 20, com.lowagie.text.Font.BOLDITALIC, Color.DARK_GRAY);
-            Paragraph logo = new Paragraph("🛒 shopping B-T-T ING3", logoFont);
+            Paragraph logo = new Paragraph("🛒 Shopping B-T-T ING3", logoFont);
             logo.setAlignment(Element.ALIGN_CENTER);
             doc.add(logo);
 
-            doc.add(new Paragraph(" "));
-            Paragraph titre = new Paragraph("FACTURE", new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 16, com.lowagie.text.Font.BOLD));
+            doc.add(new Paragraph(" "));                Paragraph titre = new Paragraph("FACTURE", new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 16, com.lowagie.text.Font.BOLD));
             titre.setAlignment(Element.ALIGN_CENTER);
             doc.add(titre);
             doc.add(new Paragraph(" "));
@@ -125,19 +136,17 @@ public class VueDetailFacture extends JPanel {
             table.addCell("Quantité");
             table.addCell("Sous-total");
 
-            double total = 0.0;
             for (LignePanier l : lignes) {
                 table.addCell(l.getNomProduit());
                 table.addCell(String.format("%.2f €", l.getPrix()));
                 table.addCell(String.valueOf(l.getQuantite()));
                 double sousTotal = l.getPrix() * l.getQuantite();
                 table.addCell(String.format("%.2f €", sousTotal));
-                total += sousTotal;
             }
 
             doc.add(table);
             doc.add(new Paragraph(" "));
-            doc.add(new Paragraph("Total à payer : " + String.format("%.2f", total) + " €"));
+            doc.add(new Paragraph("Total à payer : " + String.format("%.2f", Double.parseDouble(labelTotal.getText().replace("Total : ", "").replace(" €", ""))) + " €"));
 
             doc.add(new Paragraph(" "));
             Paragraph merci = new Paragraph("Merci de votre commande !", new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 14, com.lowagie.text.Font.ITALIC));

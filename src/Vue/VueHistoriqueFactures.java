@@ -19,6 +19,7 @@ public class VueHistoriqueFactures extends JPanel {
     private JTable tableFactures;
     private Utilisateur utilisateur;
     private JButton boutonVoirDetail;
+    private JButton boutonRetour;
     private JCheckBox checkBox2025;
     private JComboBox<String> triComboBox;
     private FactureDAO dao;
@@ -31,33 +32,36 @@ public class VueHistoriqueFactures extends JPanel {
 
         setLayout(new BorderLayout());
 
-        // ✅ Barre supérieure avec logo + nom utilisateur
+        // ✅ Barre supérieure
         add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
 
-        // --- Panneau du haut avec filtre et tri ---
+        // ✅ Panneau de filtrage
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         checkBox2025 = new JCheckBox("Afficher uniquement 2025");
         triComboBox = new JComboBox<>(new String[]{
                 "Aucun tri", "Tri par Montant croissant", "Tri par Date décroissante"
         });
-
         topPanel.add(checkBox2025);
         topPanel.add(triComboBox);
         add(topPanel, BorderLayout.NORTH);
 
-        // Listeners
-        checkBox2025.addActionListener(e -> rechargerFactures());
-        triComboBox.addActionListener(e -> rechargerFactures());
-
-        // --- Tableau central ---
+        // ✅ Table centrale
         tableFactures = new JTable();
         add(new JScrollPane(tableFactures), BorderLayout.CENTER);
 
-        // --- Bouton de détail en bas ---
+        // ✅ Bas de page avec deux boutons
+        JPanel bas = new JPanel(new BorderLayout());
+        boutonRetour = new JButton("⬅️ Page précédente");
         boutonVoirDetail = new JButton("Voir les détails");
-        boutonVoirDetail.addActionListener(e -> ouvrirDetail());
-        add(boutonVoirDetail, BorderLayout.SOUTH);
 
+        boutonRetour.addActionListener(e -> mainWindow.retourPagePrecedente());
+        boutonVoirDetail.addActionListener(e -> ouvrirDetail());
+
+        bas.add(boutonRetour, BorderLayout.WEST);
+        bas.add(boutonVoirDetail, BorderLayout.EAST);
+        add(bas, BorderLayout.SOUTH);
+
+        // ✅ Double clic sur tableau
         tableFactures.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
@@ -66,13 +70,17 @@ public class VueHistoriqueFactures extends JPanel {
             }
         });
 
-        rechargerFactures(); // Chargement initial
+        // ✅ Listeners de filtrage/tri
+        checkBox2025.addActionListener(e -> rechargerFactures());
+        triComboBox.addActionListener(e -> rechargerFactures());
+
+        rechargerFactures();
     }
 
     private void rechargerFactures() {
         List<Facture> factures = dao.listerFacturesPourUtilisateur(utilisateur);
 
-        // Filtrage
+        // ✅ Filtre 2025
         if (checkBox2025.isSelected()) {
             factures = factures.stream()
                     .filter(f -> {
@@ -86,7 +94,7 @@ public class VueHistoriqueFactures extends JPanel {
                     .collect(Collectors.toList());
         }
 
-        // Tri
+        // ✅ Tri
         String triChoisi = (String) triComboBox.getSelectedItem();
         if (triChoisi != null) {
             switch (triChoisi) {

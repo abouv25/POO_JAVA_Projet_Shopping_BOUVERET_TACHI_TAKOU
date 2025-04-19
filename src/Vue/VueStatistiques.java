@@ -12,7 +12,6 @@ import org.jfree.data.category.DefaultCategoryDataset;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.Desktop;
 import java.awt.Font;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -38,10 +37,16 @@ public class VueStatistiques extends JPanel {
     public VueStatistiques(MainWindow mainWindow) {
         setLayout(new BorderLayout());
 
+        // ✅ Barre supérieure
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
+
+        // ✅ Titre
         JLabel titre = new JLabel("\uD83D\uDCCA Statistiques & Reporting", SwingConstants.CENTER);
         titre.setFont(new Font("SansSerif", Font.BOLD, 18));
+        titre.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         add(titre, BorderLayout.NORTH);
 
+        // ✅ Filtres
         JPanel filtres = new JPanel(new FlowLayout());
 
         comboAnnee = new JComboBox<>();
@@ -65,23 +70,34 @@ public class VueStatistiques extends JPanel {
         filtres.add(comboMois);
         filtres.add(boutonFiltrer);
 
-        add(filtres, BorderLayout.NORTH);
+        add(filtres, BorderLayout.CENTER);
 
+        // ✅ Zone des graphiques
         panelGraphiques = new JPanel();
         panelGraphiques.setLayout(new BoxLayout(panelGraphiques, BoxLayout.Y_AXIS));
         JScrollPane scrollPane = new JScrollPane(panelGraphiques);
-        add(scrollPane, BorderLayout.CENTER);
+        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+        add(scrollPane, BorderLayout.SOUTH);
+
+        // ✅ Bas
+        JPanel bas = new JPanel(new BorderLayout());
 
         JButton retour = new JButton("⬅ Retour");
-        retour.addActionListener(e -> mainWindow.switchTo("accueilAdmin"));
+        retour.addActionListener(e -> mainWindow.retourPagePrecedente());
 
         JButton exportPDF = new JButton("📥 Exporter PDF");
         exportPDF.addActionListener(e -> exporterPDF());
 
-        JPanel bas = new JPanel();
-        bas.add(exportPDF);
-        bas.add(retour);
-        add(bas, BorderLayout.SOUTH);
+        JPanel gauche = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        gauche.add(retour);
+
+        JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        droite.add(exportPDF);
+
+        bas.add(gauche, BorderLayout.WEST);
+        bas.add(droite, BorderLayout.EAST);
+
+        add(bas, BorderLayout.PAGE_END);
 
         comboAnnee.setSelectedItem(anneeActuelle);
         comboMois.setSelectedIndex(Calendar.getInstance().get(Calendar.MONTH));
@@ -157,7 +173,7 @@ public class VueStatistiques extends JPanel {
 
             document.add(new Paragraph(" "));
 
-            document.add(new Paragraph("\uD83D\uDCC4 Tableau ventes par utilisateur", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
+            document.add(new Paragraph("📄 Tableau ventes par utilisateur", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
             PdfPTable tableUser = new PdfPTable(2);
             tableUser.setWidthPercentage(100);
             tableUser.addCell("Utilisateur");
@@ -169,7 +185,7 @@ public class VueStatistiques extends JPanel {
             document.add(tableUser);
 
             document.add(new Paragraph(" "));
-            document.add(new Paragraph("\uD83D\uDCE6 Tableau ventes par produit", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
+            document.add(new Paragraph("📦 Tableau ventes par produit", FontFactory.getFont(FontFactory.HELVETICA_BOLD, 14)));
             PdfPTable tableProduit = new PdfPTable(2);
             tableProduit.setWidthPercentage(100);
             tableProduit.addCell("Produit");

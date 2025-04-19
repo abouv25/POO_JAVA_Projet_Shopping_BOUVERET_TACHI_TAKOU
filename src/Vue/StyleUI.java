@@ -26,6 +26,12 @@ public class StyleUI {
         label.setHorizontalAlignment(SwingConstants.CENTER);
     }
 
+    // ✅ Méthode manquante pour corriger ton erreur
+    public static void styliserTexte(JLabel label) {
+        label.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        label.setForeground(Color.BLACK);
+    }
+
     public static void appliquerStyleComplet(JComponent comp) {
         appliquerFondEtCadre(comp);
         for (Component c : comp.getComponents()) {

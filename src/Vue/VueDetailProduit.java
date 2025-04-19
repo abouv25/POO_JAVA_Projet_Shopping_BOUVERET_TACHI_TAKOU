@@ -13,17 +13,24 @@ public class VueDetailProduit extends JFrame {
     private JTextField champPrix;
     private JTextField champStock;
     private JButton boutonEnregistrer;
-    private JButton boutonAccueil;
+    private JButton boutonRetour;
     private Produit produit;
+    private boolean consultationSeulement;
 
-    public VueDetailProduit(Produit produit) {
+
+
+    public VueDetailProduit(Produit produit, boolean consultationSeulement) {
         this.produit = produit;
+        this.consultationSeulement = consultationSeulement;
 
         setTitle("📝 Détail du produit : " + produit.getNom());
-        setSize(400, 450);
+        setSize(500, 500);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
+
+        // ✅ Barre supérieure (logo + utilisateur)
+        add(ComposantsUI.creerBarreSuperieure(null), BorderLayout.NORTH);
 
         // 🖼️ Panel image
         JPanel imagePanel = new JPanel();
@@ -53,6 +60,12 @@ public class VueDetailProduit extends JFrame {
         champPrix = new JTextField(String.valueOf(produit.getPrix()));
         champStock = new JTextField(String.valueOf(produit.getQuantiteStock()));
 
+        if (consultationSeulement) {
+            champNom.setEditable(false);
+            champPrix.setEditable(false);
+            champStock.setEditable(false);
+        }
+
         form.add(new JLabel("Nom :"));
         form.add(champNom);
         form.add(new JLabel("Prix (€) :"));
@@ -62,19 +75,20 @@ public class VueDetailProduit extends JFrame {
 
         add(form, BorderLayout.CENTER);
 
-        // 🔘 Boutons
-        JPanel bas = new JPanel(new FlowLayout());
-        boutonEnregistrer = new JButton("💾 Enregistrer");
-        boutonAccueil = new JButton("🏠 Accueil");
+        // 🔘 Bas
+        JPanel bas = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        boutonRetour = new JButton("⬅ Retour");
+        bas.add(boutonRetour);
 
-        bas.add(boutonEnregistrer);
-        bas.add(boutonAccueil);
+        if (!consultationSeulement) {
+            boutonEnregistrer = new JButton("💾 Enregistrer");
+            bas.add(boutonEnregistrer);
+            boutonEnregistrer.addActionListener(e -> enregistrerModifications());
+        }
+
+        boutonRetour.addActionListener(e -> dispose());
 
         add(bas, BorderLayout.SOUTH);
-
-        // Actions
-        boutonEnregistrer.addActionListener(e -> enregistrerModifications());
-        boutonAccueil.addActionListener(e -> dispose());
     }
 
     private void enregistrerModifications() {

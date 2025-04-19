@@ -18,19 +18,24 @@ public class VueInscription extends JPanel {
     private JCheckBox checkBoxAdmin;
     private JButton boutonInscription;
     private JButton boutonAccueil;
+    private JButton boutonRetour;
 
     public VueInscription(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
-
         setLayout(new BorderLayout());
+        StyleUI.appliquerFondEtCadre(this);
+
+        // ✅ Barre du haut avec logo + utilisateur
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
 
         JLabel titre = new JLabel("Créer un compte", SwingConstants.CENTER);
-        titre.setFont(new Font("SansSerif", Font.BOLD, 20));
+        StyleUI.styliserTitre(titre);
         add(titre, BorderLayout.NORTH);
 
         // Formulaire
         JPanel centre = new JPanel(new GridLayout(7, 2, 10, 10));
         centre.setBorder(BorderFactory.createEmptyBorder(30, 50, 30, 50));
+        StyleUI.appliquerFondEtCadre(centre);
 
         champNom = new JTextField();
         champPrenom = new JTextField();
@@ -53,20 +58,26 @@ public class VueInscription extends JPanel {
         centre.add(checkBoxAdmin);
 
         boutonInscription = new JButton("Créer mon compte");
+        StyleUI.styliserBouton(boutonInscription);
         centre.add(new JLabel(""));
         centre.add(boutonInscription);
 
         add(centre, BorderLayout.CENTER);
 
-        // Bas : bouton Accueil
+        // ✅ Bas avec boutons Accueil et Retour
         JPanel bas = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        boutonAccueil = new JButton("Accueil");
+        boutonAccueil = new JButton("🏠 Accueil");
+        boutonRetour = new JButton("⬅ Retour");
+        StyleUI.styliserBouton(boutonAccueil);
+        StyleUI.styliserBouton(boutonRetour);
+        bas.add(boutonRetour);
         bas.add(boutonAccueil);
         add(bas, BorderLayout.SOUTH);
 
         // Actions
         boutonInscription.addActionListener(e -> creerCompte());
         boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
+        boutonRetour.addActionListener(e -> mainWindow.retourPagePrecedente());
     }
 
     private void creerCompte() {

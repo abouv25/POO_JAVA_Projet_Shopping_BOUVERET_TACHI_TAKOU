@@ -4,46 +4,56 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
 
-/**
- * Interface graphique de connexion utilisateur.
- */
 public class VueLogin extends JPanel {
 
     private JTextField champEmail;
     private JPasswordField champMotDePasse;
     private JButton boutonConnexion;
     private JButton boutonAccueil;
+    private JButton boutonMotDePasseOublie;
     private MainWindow mainWindow;
 
     public VueLogin(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
 
+        setLayout(new BorderLayout());
+        StyleUI.appliquerFondEtCadre(this);
+
+        // ✅ Barre supérieure
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
+
         champEmail = new JTextField(20);
         champMotDePasse = new JPasswordField(20);
-        boutonConnexion = new JButton("Se connecter");
-        boutonAccueil = new JButton("Accueil");
+        boutonConnexion = new JButton("🔐 Se connecter");
+        boutonAccueil = new JButton("🏠 Accueil");
+        boutonMotDePasseOublie = new JButton("❓ Mot de passe oublié ?");
 
-        // Formulaire
-        JPanel centre = new JPanel(new GridLayout(3, 2, 10, 10));
+        JPanel centre = new JPanel(new GridLayout(4, 2, 10, 10));
         centre.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        centre.add(new JLabel("Email :"));
+        StyleUI.appliquerFondEtCadre(centre);
+
+        JLabel labelEmail = new JLabel("Email :");
+        JLabel labelMdp = new JLabel("Mot de passe :");
+        centre.add(labelEmail);
         centre.add(champEmail);
-        centre.add(new JLabel("Mot de passe :"));
+        centre.add(labelMdp);
         centre.add(champMotDePasse);
         centre.add(new JLabel()); // vide
         centre.add(boutonConnexion);
+        centre.add(new JLabel()); // vide
+        centre.add(boutonMotDePasseOublie);
 
-        // Bas de l’écran avec bouton Accueil
+        StyleUI.styliserBouton(boutonConnexion);
+        StyleUI.styliserBouton(boutonMotDePasseOublie);
+
         JPanel bas = new JPanel(new FlowLayout(FlowLayout.LEFT));
         bas.add(boutonAccueil);
 
-        // Ajout au panneau principal
-        setLayout(new BorderLayout());
         add(centre, BorderLayout.CENTER);
         add(bas, BorderLayout.SOUTH);
 
-        // Action bouton accueil
         boutonAccueil.addActionListener(e -> mainWindow.switchTo("accueil"));
+        boutonMotDePasseOublie.addActionListener(e -> mainWindow.switchTo("motdepasseoublie"));
     }
 
     public String getEmail() {
