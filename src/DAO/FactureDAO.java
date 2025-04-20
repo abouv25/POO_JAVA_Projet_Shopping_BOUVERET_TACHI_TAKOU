@@ -188,6 +188,44 @@ public class FactureDAO {
         return map;
     }
 
+    public List<Facture> listerToutesLesFactures() {
+        List<Facture> factures = new ArrayList<>();
+        String sql = """
+        SELECT f.*, u.nom, u.email, u.is_admin, u.is_fidele
+        FROM facture f
+        JOIN utilisateur u ON f.id_utilisateur = u.id
+        ORDER BY f.date_facture DESC
+    """;
+
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            ResultSet rs = stmt.executeQuery();
+            while (rs.next()) {
+                Utilisateur u = new Utilisateur(
+                        rs.getInt("id_utilisateur"),
+                        rs.getString("nom"),
+                        rs.getString("email"),
+                        "", // mot de passe non utilisé ici
+                        rs.getBoolean("is_admin"),
+                        rs.getBoolean("is_fidele")
+                );
+                Facture f = new Facture(
+                        rs.getInt("id"),
+                        u,
+                        rs.getDate("date_facture").toLocalDate(),
+                        rs.getDouble("montant_total"),
+                        u.isClientFidele() ? 10.0 : 0.0
+                );
+                factures.add(f);
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur listerToutesLesFactures : " + e.getMessage());
+        }
+
+        return factures;
+    }
+
+
     public Map<String, Double> totalVentesParProduit(int annee, int mois) {
         Map<String, Double> map = new TreeMap<>();
         String sql = """

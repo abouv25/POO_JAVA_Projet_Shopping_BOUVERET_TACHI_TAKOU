@@ -29,6 +29,7 @@ public class UtilisateurDAO {
         }
     }
 
+
     // ✅ Vérifier connexion : retourne un objet complet
     public Utilisateur verifierConnexion(String email, String motDePasse) {
         String sql = "SELECT * FROM utilisateur WHERE email = ? AND motDePasse = ?";
@@ -126,6 +127,28 @@ public class UtilisateurDAO {
 
         return liste;
     }
+    public Utilisateur getUtilisateurParNom(String nom) {
+        String sql = "SELECT * FROM utilisateur WHERE nom = ?";
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, nom);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return new Utilisateur(
+                        rs.getInt("id"),
+                        rs.getString("nom"),
+                        rs.getString("email"),
+                        rs.getString("mot_de_passe"),
+                        rs.getBoolean("is_admin"),
+                        rs.getBoolean("is_fidele")
+                );
+            }
+        } catch (SQLException e) {
+            System.err.println("Erreur getUtilisateurParNom : " + e.getMessage());
+        }
+        return null;
+    }
+
 
     // ✅ Modifier le mot de passe à partir de l'email
     public boolean modifierMotDePasse(String email, String nouveauMDP) {

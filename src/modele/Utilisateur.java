@@ -23,6 +23,15 @@ public class Utilisateur {
         this.motDePasse = motDePasse;
         this.clientFidele = clientFidele;
     }
+    public Utilisateur(int id, String nom, String email, String motDePasse, boolean isAdmin, boolean isFidele) {
+        this.id = id;
+        this.nom = nom;
+        this.email = email;
+        this.motDePasse = motDePasse;
+        this.estAdmin = isAdmin;
+        this.clientFidele = isFidele;
+    }
+
 
     // ✅ Constructeur complet
     public Utilisateur(int id, String nom, String prenom, String email, String motDePasse, boolean estAdmin, boolean clientFidele) {

@@ -5,137 +5,249 @@ import modele.Facture;
 import modele.Utilisateur;
 
 import javax.swing.*;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
+
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.io.FileOutputStream;
 import java.util.List;
+
+import com.lowagie.text.*;
+import com.lowagie.text.pdf.PdfPTable;
+import com.lowagie.text.pdf.PdfWriter;
 
 public class VueHistoriqueCommandes extends JPanel {
 
     private JTable table;
     private DefaultTableModel model;
-    private JTextField champRecherche;
-    private JButton boutonRetour, boutonToutVoir;
-    private List<Facture> factures;
     private TableRowSorter<DefaultTableModel> sorter;
+    private JTextField champRecherche;
+    private JLabel labelTotal;
+    private JButton boutonExporter;
+    private JLabel labelPage;
+    private int pageActuelle = 1;
+    private final int lignesParPage = 10;
+    private List<Facture> factures;
+    private MainWindow mainWindow;
 
     public VueHistoriqueCommandes(MainWindow mainWindow) {
-        setLayout(new BorderLayout());
-
-        Utilisateur u = mainWindow.getUtilisateurConnecte();
-        if (u == null) {
-            JOptionPane.showMessageDialog(this, "Veuillez vous connecter.");
+        this.mainWindow = mainWindow;
+        Utilisateur utilisateur = mainWindow.getUtilisateurConnecte();
+        if (utilisateur == null) {
             mainWindow.switchTo("connexion");
             return;
         }
 
-        JLabel titre = new JLabel("\uD83D\uDCDC Historique de vos commandes", SwingConstants.CENTER);
-        titre.setFont(new Font("SansSerif", Font.BOLD, 18));
+        setLayout(new BorderLayout());
+        StyleUI.appliquerFondEtCadre(this);
+
+        JLabel titre = new JLabel("📄 Historique de vos commandes", SwingConstants.CENTER);
+        StyleUI.styliserTitre(titre);
         add(titre, BorderLayout.NORTH);
 
-        // Centre : tableau des factures
-        model = new DefaultTableModel(new Object[]{"Date", "N° Facture", "Montant total", "Remise", "Fidèle"}, 0) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+        model = new DefaultTableModel(new Object[]{"Date", "N° Facture", "Total", "Remise (€)"}, 0) {
+            public boolean isCellEditable(int row, int col) { return false; }
         };
 
         table = new JTable(model);
-        table.setRowHeight(28);
-
+        table.setRowHeight(26);
+        StyleUI.appliquerStyleTableau(table);
         sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
 
-        table.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (e.getClickCount() == 2) {
-                    int row = table.getSelectedRow();
-                    if (row != -1) {
-                        int idFacture = Integer.parseInt(table.getValueAt(row, 1).toString());
-                        VueDetailFacture vue = new VueDetailFacture(idFacture, u, mainWindow);
-                        mainWindow.ajouterVue("detailFacture", vue);
-                        mainWindow.switchTo("detailFacture");
-                    }
-                }
-            }
-        });
-
-        table.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
-            @Override
-            public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-                Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
-                double montant = Double.parseDouble(model.getValueAt(table.convertRowIndexToModel(row), 2).toString().replace(" €", ""));
-                if (montant > 100) {
-                    c.setBackground(new Color(220, 255, 220));
-                } else if (montant < 10) {
-                    c.setBackground(new Color(245, 245, 245));
-                } else {
-                    c.setBackground(Color.WHITE);
-                }
-                return c;
-            }
-        });
-
         JScrollPane scrollPane = new JScrollPane(table);
+        StyleUI.appliquerFondEtCadre(scrollPane);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Bas : champ de recherche + boutons
         JPanel bas = new JPanel(new BorderLayout());
+        StyleUI.appliquerFondEtCadre(bas);
 
+        // --- Recherche ---
         champRecherche = new JTextField(10);
-        champRecherche.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
-            public void insertUpdate(javax.swing.event.DocumentEvent e) { filtrer(); }
-            public void removeUpdate(javax.swing.event.DocumentEvent e) { filtrer(); }
-            public void changedUpdate(javax.swing.event.DocumentEvent e) { filtrer(); }
-        });
+        JButton boutonToutVoir = new JButton("Tout voir");
+        boutonExporter = new JButton("Exporter PDF");
 
         JPanel recherchePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        recherchePanel.add(new JLabel("🔎 N° Facture : "));
+        StyleUI.appliquerFondEtCadre(recherchePanel);
+        recherchePanel.add(new JLabel("🔍 Rechercher N° : "));
         recherchePanel.add(champRecherche);
-
-        boutonToutVoir = new JButton("Tout voir");
-        boutonToutVoir.addActionListener(e -> champRecherche.setText(""));
         recherchePanel.add(boutonToutVoir);
+        recherchePanel.add(boutonExporter);
 
-        boutonRetour = new JButton("⬅ Retour");
-        boutonRetour.addActionListener(e -> mainWindow.retourPagePrecedente());
+        champRecherche.getDocument().addDocumentListener(new DocumentListener() {
+            public void insertUpdate(DocumentEvent e) { filtrer(); }
+            public void removeUpdate(DocumentEvent e) { filtrer(); }
+            public void changedUpdate(DocumentEvent e) { filtrer(); }
+        });
+        boutonToutVoir.addActionListener(e -> champRecherche.setText(""));
 
-        JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        droite.add(boutonRetour);
+        // --- Total global ---
+        labelTotal = new JLabel("Total global : 0.00 €");
+        StyleUI.styliserTexte(labelTotal);
+        JPanel totalPanel = new JPanel();
+        StyleUI.appliquerFondEtCadre(totalPanel);
+        totalPanel.add(labelTotal);
+
+        // --- Bouton retour ---
+        JButton retour = new JButton("⬅ Retour");
+        retour.addActionListener(e -> mainWindow.retourPagePrecedente());
+        JPanel retourPanel = new JPanel();
+        StyleUI.appliquerFondEtCadre(retourPanel);
+        retourPanel.add(retour);
+
+        // --- Pagination ---
+        JButton prec = new JButton("◀");
+        JButton suiv = new JButton("▶");
+        labelPage = new JLabel("Page 1");
+        JPanel paginationPanel = new JPanel();
+        StyleUI.appliquerFondEtCadre(paginationPanel);
+        paginationPanel.add(prec);
+        paginationPanel.add(labelPage);
+        paginationPanel.add(suiv);
+
+        prec.addActionListener(e -> {
+            if (pageActuelle > 1) {
+                pageActuelle--;
+                chargerFactures(mainWindow.getUtilisateurConnecte());
+            }
+        });
+        suiv.addActionListener(e -> {
+            int total = model.getRowCount();
+            if (pageActuelle * lignesParPage < factures.size()) {
+                pageActuelle++;
+                chargerFactures(mainWindow.getUtilisateurConnecte());
+            }
+        });
+
+        JPanel centreBas = new JPanel(new BorderLayout());
+        centreBas.add(totalPanel, BorderLayout.WEST);
+        centreBas.add(paginationPanel, BorderLayout.EAST);
 
         bas.add(recherchePanel, BorderLayout.WEST);
-        bas.add(droite, BorderLayout.EAST);
-
+        bas.add(centreBas, BorderLayout.CENTER);
+        bas.add(retourPanel, BorderLayout.EAST);
         add(bas, BorderLayout.SOUTH);
 
-        chargerFactures(u);
-    }
+        // --- Tooltips ---
+        table.addMouseMotionListener(new MouseAdapter() {
+            public void mouseMoved(MouseEvent e) {
+                int row = table.rowAtPoint(e.getPoint());
+                if (row >= 0 && row < table.getRowCount()) {
+                    int modelRow = table.convertRowIndexToModel(row);
+                    String date = model.getValueAt(modelRow, 0).toString();
+                    String num = model.getValueAt(modelRow, 1).toString();
+                    String total = model.getValueAt(modelRow, 2).toString();
+                    String remise = model.getValueAt(modelRow, 3).toString();
+                    table.setToolTipText("Facture n°" + num + " du " + date + "\nTotal : " + total + " | Remise : " + remise);
+                } else {
+                    table.setToolTipText(null);
+                }
+            }
+        });
 
-    private void chargerFactures(Utilisateur u) {
-        FactureDAO dao = new FactureDAO();
-        factures = dao.listerFacturesPourUtilisateur(u);
+        // --- Double-clic pour voir les détails ---
+        table.addMouseListener(new MouseAdapter() {
+            public void mouseClicked(MouseEvent e) {
+                if (e.getClickCount() == 2 && table.getSelectedRow() != -1) {
+                    int row = table.convertRowIndexToModel(table.getSelectedRow());
+                    int idFacture = Integer.parseInt(model.getValueAt(row, 1).toString());
+                    mainWindow.ajouterVue("detailFacture", new VueDetailFacture(idFacture, utilisateur, mainWindow));
+                    mainWindow.switchTo("detailFacture");
+                }
+            }
+        });
 
-        model.setRowCount(0);
-
-        for (Facture f : factures) {
-            String remise = String.format("%.2f €", f.getRemisePourcent() * f.calculerTotal() / 100);
-            String badge = f.getRemisePourcent() > 0 ? "✅" : "-";
-            model.addRow(new Object[]{
-                    f.getDateFormatee(),
-                    f.getId(),
-                    String.format("%.2f €", f.getMontantTotal()),
-                    remise,
-                    badge
-            });
-        }
+        // --- Export PDF ---
+        boutonExporter.addActionListener(e -> exporterPDF(utilisateur));
+        chargerFactures(utilisateur);
     }
 
     private void filtrer() {
-        RowFilter<DefaultTableModel, Object> rf = RowFilter.regexFilter("(?i)" + champRecherche.getText(), 1);
-        sorter.setRowFilter(rf);
+        pageActuelle = 1;
+        chargerFactures(mainWindow.getUtilisateurConnecte());
+    }
+
+    private void chargerFactures(Utilisateur utilisateur) {
+        FactureDAO dao = new FactureDAO();
+        factures = dao.listerFacturesPourUtilisateur(utilisateur);
+
+        String texte = champRecherche.getText().trim().toLowerCase();
+        List<Facture> filtres = factures.stream()
+                .filter(f -> texte.isEmpty() || ("" + f.getId()).contains(texte))
+                .toList();
+
+        int debut = (pageActuelle - 1) * lignesParPage;
+        int fin = Math.min(debut + lignesParPage, filtres.size());
+        List<Facture> page = filtres.subList(debut, fin);
+
+        model.setRowCount(0);
+        double totalGlobal = 0.0;
+
+        for (Facture f : page) {
+            double total = f.getMontantTotal();
+            double remise = f.getLignes() != null
+                    ? f.getLignes().stream().mapToDouble(l -> l.getPrix() * l.getQuantite()).sum() * f.getRemisePourcent() / 100
+                    : 0;
+
+            model.addRow(new Object[]{
+                    f.getDateFormatee(),
+                    f.getId(),
+                    String.format("%.2f €", total),
+                    String.format("%.2f €", remise)
+            });
+
+            totalGlobal += total;
+        }
+
+        labelTotal.setText("Total global : " + String.format("%.2f", totalGlobal) + " €");
+        int totalPages = (int) Math.ceil((double) filtres.size() / lignesParPage);
+        labelPage.setText("Page " + pageActuelle + " / " + (totalPages == 0 ? 1 : totalPages));
+    }
+
+    private void exporterPDF(Utilisateur utilisateur) {
+        try {
+            JFileChooser fileChooser = new JFileChooser();
+            fileChooser.setDialogTitle("Exporter les factures (PDF)");
+            fileChooser.setSelectedFile(new java.io.File("factures_" + utilisateur.getNom() + ".pdf"));
+
+            if (fileChooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+            String path = fileChooser.getSelectedFile().getAbsolutePath();
+            if (!path.endsWith(".pdf")) path += ".pdf";
+
+            Document document = new Document();
+            PdfWriter.getInstance(document, new FileOutputStream(path));
+            document.open();
+
+            document.add(new Paragraph("Historique des commandes de : " + utilisateur.getNom()));
+            document.add(new Paragraph(" "));
+
+            PdfPTable tablePDF = new PdfPTable(4);
+            tablePDF.setWidthPercentage(100);
+            tablePDF.addCell("Date");
+            tablePDF.addCell("N° Facture");
+            tablePDF.addCell("Total");
+            tablePDF.addCell("Remise");
+
+            for (int i = 0; i < model.getRowCount(); i++) {
+                tablePDF.addCell(model.getValueAt(i, 0).toString());
+                tablePDF.addCell(model.getValueAt(i, 1).toString());
+                tablePDF.addCell(model.getValueAt(i, 2).toString());
+                tablePDF.addCell(model.getValueAt(i, 3).toString());
+            }
+
+            document.add(tablePDF);
+            document.add(new Paragraph(" "));
+            document.add(new Paragraph(labelTotal.getText()));
+            document.close();
+
+            JOptionPane.showMessageDialog(this, "PDF exporté dans :\n" + path);
+
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erreur export PDF : " + ex.getMessage());
+        }
     }
 }
