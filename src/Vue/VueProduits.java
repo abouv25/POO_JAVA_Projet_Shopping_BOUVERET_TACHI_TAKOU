@@ -1,3 +1,4 @@
+// package et imports identiques
 package Vue;
 
 import DAO.ProduitDAO;
@@ -9,9 +10,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.File;
 import java.util.List;
-import java.util.stream.Collectors;
-
-// ... [imports identiques]
 import java.util.stream.Collectors;
 
 public class VueProduits extends JPanel {
@@ -142,25 +140,23 @@ public class VueProduits extends JPanel {
         String maxStr = champPrixMax.getText().trim();
         boolean filtrerStock = checkBoxStock.isSelected();
 
-        double min = 0;
-        double max = Double.MAX_VALUE;
-
         try {
-            if (!minStr.isEmpty()) min = Double.parseDouble(minStr);
-            if (!maxStr.isEmpty()) max = Double.parseDouble(maxStr);
+            final double min = minStr.isEmpty() ? 0 : Double.parseDouble(minStr);
+            final double max = maxStr.isEmpty() ? Double.MAX_VALUE : Double.parseDouble(maxStr);
+
+            List<Produit> filtres = tousLesProduits.stream()
+                    .filter(p -> p.getNom().toLowerCase().contains(recherche))
+                    .filter(p -> p.getPrix() >= min && p.getPrix() <= max)
+                    .filter(p -> !filtrerStock || p.getQuantiteStock() > 0)
+                    .collect(Collectors.toList());
+
+            afficherProduits(filtres);
+
         } catch (NumberFormatException e) {
             JOptionPane.showMessageDialog(this, "Prix invalide.");
-            return;
         }
-
-        List<Produit> filtres = tousLesProduits.stream()
-                .filter(p -> p.getNom().toLowerCase().contains(recherche))
-                .filter(p -> p.getPrix() >= min && p.getPrix() <= max)
-                .filter(p -> !filtrerStock || p.getQuantiteStock() > 0)
-                .collect(Collectors.toList());
-
-        afficherProduits(filtres);
     }
+
 
     private void afficherProduits(List<Produit> produits) {
         panelCartes.removeAll();
@@ -212,6 +208,8 @@ public class VueProduits extends JPanel {
 
         carte.add(Box.createVerticalStrut(10));
 
+        Produit produitFinal = produit; // 🔧 pour corriger l'erreur lambda
+
         JButton boutonAjouter = new JButton("Ajouter au panier");
         boutonAjouter.setAlignmentX(Component.CENTER_ALIGNMENT);
         boutonAjouter.addActionListener((ActionEvent e) -> {
@@ -220,8 +218,8 @@ public class VueProduits extends JPanel {
             try {
                 int qte = Integer.parseInt(input);
                 if (qte <= 0) throw new NumberFormatException();
-                mainWindow.getPanier().ajouterProduit(produit.getId(), produit.getNom(), produit.getPrix(), qte);
-                JOptionPane.showMessageDialog(this, qte + " x " + produit.getNom() + " ajouté(s) au panier.");
+                mainWindow.getPanier().ajouterProduit(produitFinal.getId(), produitFinal.getNom(), produitFinal.getPrix(), qte);
+                JOptionPane.showMessageDialog(this, qte + " x " + produitFinal.getNom() + " ajouté(s) au panier.");
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Quantité invalide.");
             }
@@ -230,7 +228,7 @@ public class VueProduits extends JPanel {
         JButton boutonVoir = new JButton("Voir le produit");
         boutonVoir.setAlignmentX(Component.CENTER_ALIGNMENT);
         boutonVoir.addActionListener(e -> {
-            VueDetailProduit vue = new VueDetailProduit(produit, true);
+            VueDetailProduit vue = new VueDetailProduit(produitFinal, true);
             vue.setVisible(true);
         });
 

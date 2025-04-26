@@ -148,6 +148,21 @@ public class UtilisateurDAO {
         }
         return null;
     }
+    public boolean emailExistant(String email) {
+        String sql = "SELECT COUNT(*) FROM utilisateur WHERE email = ?";
+        try (Connection conn = ConnexionBD.getConnection();
+             PreparedStatement stmt = conn.prepareStatement(sql)) {
+            stmt.setString(1, email);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                return rs.getInt(1) > 0;
+            }
+        } catch (Exception e) {
+            System.err.println("Erreur vérification email : " + e.getMessage());
+        }
+        return false;
+    }
+
 
 
     // ✅ Modifier le mot de passe à partir de l'email
