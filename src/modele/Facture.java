@@ -49,6 +49,22 @@ public class Facture {
         return totalBrut - remise;
     }
 
+    public void calculerMontantTotal() {
+        if (lignes == null) {
+            montantTotal = 0;
+            return;
+        }
+        montantTotal = lignes.stream()
+                .mapToDouble(ligne -> ligne.getPrix() * ligne.getQuantite())
+                .sum();
+
+        // Appliquer la remise s'il y en a
+        if (remisePourcent > 0) {
+            montantTotal = montantTotal * (1 - remisePourcent / 100.0);
+        }
+    }
+
+
     // Getters / Setters
     public int getId() {
         return id;

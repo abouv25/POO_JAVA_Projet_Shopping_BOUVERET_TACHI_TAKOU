@@ -24,33 +24,35 @@ public class VueDetailFacture extends JPanel {
     private JButton boutonRetour;
     private Utilisateur utilisateur;
     private MainWindow mainWindow;
+    private int idFacture;
 
     public VueDetailFacture(int idFacture, Utilisateur utilisateur, MainWindow mainWindow) {
+        this.idFacture = idFacture;
         this.utilisateur = utilisateur;
         this.mainWindow = mainWindow;
 
-        // Appliquer style global
-        StyleUI.appliquerFondEtCadre(this);
         setLayout(new BorderLayout());
+        StyleUI.appliquerFondEtCadre(this);
 
         // ✅ Barre du haut avec logo et utilisateur
         add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
 
-        // --- Tableau central ---
+        // ✅ Tableau
         tableLignes = new JTable();
+        tableLignes.setRowHeight(28);
         add(new JScrollPane(tableLignes), BorderLayout.CENTER);
 
-        // --- Bas : retour + total + bouton exporter ---
+        // ✅ Bas
         JPanel bas = new JPanel(new BorderLayout());
         bas.setBackground(getBackground());
 
-        // Bouton Retour
+        // ↩️ Retour
         boutonRetour = new JButton("⬅️ Retour");
         StyleUI.styliserBouton(boutonRetour);
         boutonRetour.addActionListener(e -> mainWindow.retourPagePrecedente());
         bas.add(boutonRetour, BorderLayout.WEST);
 
-        // Total + Export
+        // ➡️ Total + Export
         JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         droite.setOpaque(false);
 
@@ -64,17 +66,18 @@ public class VueDetailFacture extends JPanel {
         bas.add(droite, BorderLayout.EAST);
         add(bas, BorderLayout.SOUTH);
 
-        chargerLignes(idFacture);
+        boutonExporter.addActionListener(e -> exporterPDF());
 
-        boutonExporter.addActionListener(e -> exporterPDF(idFacture));
+        // ✅ Charger données
+        chargerLignes();
     }
 
-    private void chargerLignes(int idFacture) {
+    private void chargerLignes() {
         FactureDAO dao = new FactureDAO();
         List<LignePanier> lignes = dao.listerLignesParFacture(idFacture);
 
         DefaultTableModel model = new DefaultTableModel(
-                new Object[]{"Produit", "Prix", "Quantité", "Sous-total"}, 0);
+                new Object[]{"Produit", "Prix Unitaire", "Quantité", "Sous-total"}, 0);
 
         double total = 0.0;
         for (LignePanier l : lignes) {
@@ -92,47 +95,41 @@ public class VueDetailFacture extends JPanel {
         labelTotal.setText("Total : " + String.format("%.2f", total) + " €");
     }
 
-    private void exporterPDF(int idFacture) {
+    private void exporterPDF() {
         try {
             FactureDAO dao = new FactureDAO();
             List<LignePanier> lignes = dao.listerLignesParFacture(idFacture);
 
             JFileChooser fileChooser = new JFileChooser();
-            fileChooser.setDialogTitle("Enregistrer la facture au format PDF");
+            fileChooser.setDialogTitle("Enregistrer la facture en PDF");
             fileChooser.setSelectedFile(new java.io.File("facture_" + idFacture + ".pdf"));
 
-            int userSelection = fileChooser.showSaveDialog(this);
-            if (userSelection != JFileChooser.APPROVE_OPTION) return;
+            int res = fileChooser.showSaveDialog(this);
+            if (res != JFileChooser.APPROVE_OPTION) return;
 
-            java.io.File selectedFile = fileChooser.getSelectedFile();
-            String filePath = selectedFile.getAbsolutePath();
-            if (!filePath.toLowerCase().endsWith(".pdf")) {
-                filePath += ".pdf";
+            String path = fileChooser.getSelectedFile().getAbsolutePath();
+            if (!path.toLowerCase().endsWith(".pdf")) {
+                path += ".pdf";
             }
 
             Document doc = new Document();
-            PdfWriter.getInstance(doc, new FileOutputStream(filePath));
+            PdfWriter.getInstance(doc, new FileOutputStream(path));
             doc.open();
 
-            com.lowagie.text.Font logoFont = new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 20, com.lowagie.text.Font.BOLDITALIC, Color.DARK_GRAY);
-            Paragraph logo = new Paragraph("🛒 Shopping B-T-T ING3", logoFont);
-            logo.setAlignment(Element.ALIGN_CENTER);
-            doc.add(logo);
-
-            doc.add(new Paragraph(" "));                Paragraph titre = new Paragraph("FACTURE", new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 16, com.lowagie.text.Font.BOLD));
+            Paragraph titre = new Paragraph("🛒 BTT Shopping - Facture", new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 20, com.lowagie.text.Font.BOLDITALIC));
             titre.setAlignment(Element.ALIGN_CENTER);
             doc.add(titre);
             doc.add(new Paragraph(" "));
 
-            doc.add(new Paragraph("Numéro de facture : " + idFacture));
-            doc.add(new Paragraph("Date : " + java.time.LocalDate.now().format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy"))));
-            doc.add(new Paragraph("Client : " + utilisateur.getNom()));
+            Paragraph infos = new Paragraph("Facture n° " + idFacture + "\nClient : " + utilisateur.getNom(), new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 14));
+            infos.setAlignment(Element.ALIGN_CENTER);
+            doc.add(infos);
             doc.add(new Paragraph(" "));
 
             PdfPTable table = new PdfPTable(4);
             table.setWidthPercentage(100);
             table.addCell("Produit");
-            table.addCell("Prix unitaire");
+            table.addCell("Prix");
             table.addCell("Quantité");
             table.addCell("Sous-total");
 
@@ -146,7 +143,7 @@ public class VueDetailFacture extends JPanel {
 
             doc.add(table);
             doc.add(new Paragraph(" "));
-            doc.add(new Paragraph("Total à payer : " + String.format("%.2f", Double.parseDouble(labelTotal.getText().replace("Total : ", "").replace(" €", ""))) + " €"));
+            doc.add(new Paragraph("Total TTC : " + labelTotal.getText().replace("Total : ", "") + " €"));
 
             doc.add(new Paragraph(" "));
             Paragraph merci = new Paragraph("Merci de votre commande !", new com.lowagie.text.Font(com.lowagie.text.Font.HELVETICA, 14, com.lowagie.text.Font.ITALIC));
@@ -155,18 +152,13 @@ public class VueDetailFacture extends JPanel {
 
             doc.close();
 
-            JOptionPane.showMessageDialog(this,
-                    "PDF exporté avec succès :\n" + filePath,
-                    "Export terminé", JOptionPane.INFORMATION_MESSAGE);
-
+            JOptionPane.showMessageDialog(this, "PDF exporté avec succès !");
             if (Desktop.isDesktopSupported()) {
-                Desktop.getDesktop().open(new java.io.File(filePath));
+                Desktop.getDesktop().open(new java.io.File(path));
             }
 
-        } catch (Exception e) {
-            JOptionPane.showMessageDialog(this,
-                    "Erreur lors de l'export PDF : " + e.getMessage(),
-                    "Erreur", JOptionPane.ERROR_MESSAGE);
+        } catch (Exception ex) {
+            JOptionPane.showMessageDialog(this, "Erreur export PDF : " + ex.getMessage());
         }
     }
 }

@@ -8,9 +8,10 @@ import java.util.*;
 
 public class FactureDAO {
 
-    public boolean ajouterFacture(Facture f) {
+    public int ajouterFacture(Facture f) {
         String sqlFacture = "INSERT INTO facture (id_utilisateur, date_facture, montant_total) VALUES (?, ?, ?)";
         String sqlLigneFacture = "INSERT INTO ligne_facture (id_facture, id_produit, quantite, prix_unitaire) VALUES (?, ?, ?, ?)";
+        int idFacture = -1;
 
         try (Connection conn = ConnexionBD.getConnection()) {
             conn.setAutoCommit(false);
@@ -22,39 +23,41 @@ public class FactureDAO {
                 stmtFacture.executeUpdate();
 
                 ResultSet generatedKeys = stmtFacture.getGeneratedKeys();
-                if (!generatedKeys.next()) throw new SQLException("Échec génération ID facture.");
-                int idFacture = generatedKeys.getInt(1);
-                f.setId(idFacture);
+                if (generatedKeys.next()) {
+                    idFacture = generatedKeys.getInt(1);
+                    f.setId(idFacture);
 
-                try (PreparedStatement stmtLigne = conn.prepareStatement(sqlLigneFacture)) {
-                    for (LignePanier ligne : f.getLignes()) {
-                        stmtLigne.setInt(1, idFacture);
-                        stmtLigne.setInt(2, ligne.getIdProduit());
-                        stmtLigne.setInt(3, ligne.getQuantite());
-                        stmtLigne.setDouble(4, ligne.getPrix());
-                        stmtLigne.addBatch();
+                    try (PreparedStatement stmtLigne = conn.prepareStatement(sqlLigneFacture)) {
+                        for (LignePanier ligne : f.getLignes()) {
+                            stmtLigne.setInt(1, idFacture);
+                            stmtLigne.setInt(2, ligne.getIdProduit());
+                            stmtLigne.setInt(3, ligne.getQuantite());
+                            stmtLigne.setDouble(4, ligne.getPrix());
+                            stmtLigne.addBatch();
+                        }
+                        stmtLigne.executeBatch();
                     }
-                    stmtLigne.executeBatch();
                 }
 
                 conn.commit();
-                return true;
-
             } catch (SQLException e) {
                 conn.rollback();
-                System.err.println("Erreur enregistrement facture : " + e.getMessage());
-                return false;
+                System.err.println("Erreur lors de l'ajout de facture : " + e.getMessage());
+                idFacture = -1;
             }
 
         } catch (SQLException e) {
-            System.err.println("Erreur connexion ou rollback : " + e.getMessage());
-            return false;
+            System.err.println("Erreur de connexion : " + e.getMessage());
+            idFacture = -1;
         }
+
+        return idFacture;
     }
+
 
     public List<Facture> listerFacturesPourUtilisateur(Utilisateur u) {
         List<Facture> factures = new ArrayList<>();
-        String sql = "SELECT * FROM facture WHERE id_utilisateur = ? ORDER BY date_facture DESC";
+        String sql = "SELECT * FROM facture WHERE utilisateur_id = ? ORDER BY date_facture DESC";
 
         try (Connection conn = ConnexionBD.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {

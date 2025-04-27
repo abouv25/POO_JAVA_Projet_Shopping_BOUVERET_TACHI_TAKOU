@@ -8,18 +8,19 @@ import java.util.List;
 
 public class ReductionDAO {
 
-    // 🔗 Méthode interne pour obtenir la connexion
+    // 🔗 Connexion à la base
     private Connection getConnection() throws SQLException {
         return ConnexionBD.getConnection();
     }
 
     // ✅ Ajouter une réduction
     public boolean ajouterReduction(Reduction reduction) {
-        String sql = "INSERT INTO reduction (pourcentage) VALUES (?)";
+        String sql = "INSERT INTO reduction (nom, pourcentage) VALUES (?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setDouble(1, reduction.getPourcentage());
+            stmt.setString(1, reduction.getNom());
+            stmt.setDouble(2, reduction.getPourcentage());
             stmt.executeUpdate();
             return true;
 
@@ -41,6 +42,7 @@ public class ReductionDAO {
             while (rs.next()) {
                 Reduction r = new Reduction(
                         rs.getInt("id"),
+                        rs.getString("nom"),
                         rs.getDouble("pourcentage")
                 );
                 liste.add(r);
@@ -55,12 +57,13 @@ public class ReductionDAO {
 
     // ✅ Modifier une réduction existante
     public boolean modifierReduction(Reduction reduction) {
-        String sql = "UPDATE reduction SET pourcentage = ? WHERE id = ?";
+        String sql = "UPDATE reduction SET nom = ?, pourcentage = ? WHERE id = ?";
         try (Connection conn = getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
 
-            stmt.setDouble(1, reduction.getPourcentage());
-            stmt.setInt(2, reduction.getId());
+            stmt.setString(1, reduction.getNom());
+            stmt.setDouble(2, reduction.getPourcentage());
+            stmt.setInt(3, reduction.getId());
 
             stmt.executeUpdate();
             return true;

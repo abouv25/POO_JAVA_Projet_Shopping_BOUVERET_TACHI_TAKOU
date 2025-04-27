@@ -20,18 +20,18 @@ public class VueGestionReductions extends JPanel {
         // ✅ Barre supérieure
         add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
 
-        // ✅ Panneau haut avec bouton ajouter
+        // ✅ Haut : bouton ajouter
         JPanel haut = new JPanel(new FlowLayout(FlowLayout.CENTER));
-        StyleUI.appliquerFondEtCadre(haut);
+        haut.setOpaque(false);
 
-        JButton boutonAjouter = new JButton("➕ Ajouter Réduction");
+        JButton boutonAjouter = new JButton("➕ Ajouter une réduction");
         StyleUI.styliserBouton(boutonAjouter);
         boutonAjouter.addActionListener(e -> ouvrirFenetreAjout());
 
         haut.add(boutonAjouter);
         add(haut, BorderLayout.NORTH);
 
-        // ✅ Zone centrale : liste réductions
+        // ✅ Centre : liste réductions
         panelListe = new JPanel();
         panelListe.setLayout(new BoxLayout(panelListe, BoxLayout.Y_AXIS));
         panelListe.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
@@ -41,6 +41,17 @@ public class VueGestionReductions extends JPanel {
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
 
+        // ✅ Bas : bouton retour
+        JPanel bas = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        bas.setOpaque(false);
+
+        JButton boutonRetour = new JButton("⬅ Retour");
+        StyleUI.styliserBouton(boutonRetour);
+        boutonRetour.addActionListener(e -> mainWindow.retourPagePrecedente());
+
+        bas.add(boutonRetour);
+        add(bas, BorderLayout.SOUTH);
+
         rafraichirListe();
     }
 
@@ -49,17 +60,19 @@ public class VueGestionReductions extends JPanel {
 
         List<Reduction> reductions = new ReductionDAO().listerReductions();
         if (reductions.isEmpty()) {
-            JLabel videLabel = new JLabel("Aucune réduction enregistrée.", SwingConstants.CENTER);
-            videLabel.setFont(new Font("SansSerif", Font.ITALIC, 14));
-            videLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            panelListe.add(videLabel);
+            JLabel vide = new JLabel("Aucune réduction enregistrée.", SwingConstants.CENTER);
+            vide.setFont(new Font("SansSerif", Font.ITALIC, 14));
+            vide.setAlignmentX(Component.CENTER_ALIGNMENT);
+            panelListe.add(vide);
         } else {
             for (Reduction r : reductions) {
                 JPanel carte = new JPanel(new FlowLayout(FlowLayout.LEFT, 20, 10));
-                carte.setBorder(BorderFactory.createTitledBorder("Réduction de " + r.getPourcentage() + " %"));
+                carte.setBorder(BorderFactory.createTitledBorder(r.getNom()));
                 StyleUI.appliquerFondEtCadre(carte);
 
-                JLabel pourcentageLabel = new JLabel(r.getPourcentage() + " %");
+                JLabel pourcentage = new JLabel(r.getPourcentage() + " %");
+                pourcentage.setFont(new Font("SansSerif", Font.BOLD, 14));
+
                 JButton modifier = new JButton("✏️ Modifier");
                 JButton supprimer = new JButton("🗑️ Supprimer");
 
@@ -69,12 +82,12 @@ public class VueGestionReductions extends JPanel {
                 modifier.addActionListener(e -> modifierReduction(r));
                 supprimer.addActionListener(e -> supprimerReduction(r));
 
-                carte.add(pourcentageLabel);
+                carte.add(pourcentage);
                 carte.add(modifier);
                 carte.add(supprimer);
 
                 panelListe.add(carte);
-                panelListe.add(Box.createVerticalStrut(10)); // Petit espace entre les cartes
+                panelListe.add(Box.createVerticalStrut(10));
             }
         }
 
@@ -83,26 +96,69 @@ public class VueGestionReductions extends JPanel {
     }
 
     private void ouvrirFenetreAjout() {
-        VueCreationReduction creation = new VueCreationReduction(mainWindow);
-        creation.setVisible(true);
+        JTextField champNom = new JTextField();
+        JTextField champPourcentage = new JTextField();
+        Object[] champs = {
+                "Nom de la réduction :", champNom,
+                "Pourcentage de réduction :", champPourcentage
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, champs, "Ajouter Réduction", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
+            try {
+                String nom = champNom.getText().trim();
+                double pourcentage = Double.parseDouble(champPourcentage.getText().trim());
+
+                if (nom.isEmpty() || pourcentage <= 0 || pourcentage >= 100) {
+                    JOptionPane.showMessageDialog(this, "Nom ou pourcentage invalide.");
+                    return;
+                }
+
+                Reduction r = new Reduction();
+                r.setNom(nom);
+                r.setPourcentage(pourcentage);
+
+                boolean ok = new ReductionDAO().ajouterReduction(r);
+                if (ok) {
+                    JOptionPane.showMessageDialog(this, "Réduction ajoutée !");
+                    rafraichirListe();
+                } else {
+                    JOptionPane.showMessageDialog(this, "Erreur ajout.");
+                }
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(this, "Nombre invalide.");
+            }
+        }
     }
 
     private void modifierReduction(Reduction r) {
-        String input = JOptionPane.showInputDialog(this, "Nouveau pourcentage :", r.getPourcentage());
-        if (input != null) {
+        JTextField champNom = new JTextField(r.getNom());
+        JTextField champPourcentage = new JTextField(String.valueOf(r.getPourcentage()));
+        Object[] champs = {
+                "Nom de la réduction :", champNom,
+                "Nouveau pourcentage :", champPourcentage
+        };
+
+        int option = JOptionPane.showConfirmDialog(this, champs, "Modifier Réduction", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.OK_OPTION) {
             try {
-                double nouveau = Double.parseDouble(input);
-                if (nouveau <= 0 || nouveau >= 100) {
-                    JOptionPane.showMessageDialog(this, "Pourcentage invalide.");
+                String nom = champNom.getText().trim();
+                double pourcentage = Double.parseDouble(champPourcentage.getText().trim());
+
+                if (nom.isEmpty() || pourcentage <= 0 || pourcentage >= 100) {
+                    JOptionPane.showMessageDialog(this, "Nom ou pourcentage invalide.");
                     return;
                 }
-                r.setPourcentage(nouveau);
+
+                r.setNom(nom);
+                r.setPourcentage(pourcentage);
+
                 boolean ok = new ReductionDAO().modifierReduction(r);
                 if (ok) {
                     JOptionPane.showMessageDialog(this, "Réduction modifiée !");
                     rafraichirListe();
                 } else {
-                    JOptionPane.showMessageDialog(this, "Erreur de modification.");
+                    JOptionPane.showMessageDialog(this, "Erreur modification.");
                 }
             } catch (NumberFormatException ex) {
                 JOptionPane.showMessageDialog(this, "Nombre invalide.");
@@ -118,7 +174,7 @@ public class VueGestionReductions extends JPanel {
                 JOptionPane.showMessageDialog(this, "Réduction supprimée.");
                 rafraichirListe();
             } else {
-                JOptionPane.showMessageDialog(this, "Erreur de suppression.");
+                JOptionPane.showMessageDialog(this, "Erreur suppression.");
             }
         }
     }

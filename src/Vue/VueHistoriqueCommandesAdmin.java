@@ -6,8 +6,6 @@ import modele.Facture;
 import modele.Utilisateur;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
@@ -35,6 +33,8 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
     private int lignesParPage = 10;
     private List<Facture> facturesGlobales;
 
+    private List<Facture> facturesFiltrees;
+
     public VueHistoriqueCommandesAdmin(MainWindow mainWindow) {
         setLayout(new BorderLayout());
         StyleUI.appliquerFondEtCadre(this);
@@ -47,14 +47,30 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
             public boolean isCellEditable(int row, int col) { return false; }
         };
 
-        table = new JTable(model);
+        table = new JTable(model) {
+            @Override
+            public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
+                Component c = super.prepareRenderer(renderer, row, column);
+                double total = Double.parseDouble(getValueAt(row, 3).toString().replace(" €", ""));
+                double remise = Double.parseDouble(getValueAt(row, 4).toString().replace(" €", ""));
+                if (remise > 0) {
+                    c.setBackground(new Color(204, 229, 255)); // bleu clair
+                } else if (total > 100) {
+                    c.setBackground(new Color(204, 255, 204)); // vert clair
+                } else {
+                    c.setBackground(Color.WHITE);
+                }
+                return c;
+            }
+        };
+
         StyleUI.appliquerStyleTableau(table);
         sorter = new TableRowSorter<>(model);
         table.setRowSorter(sorter);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
-        JPanel filtres = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        StyleUI.appliquerFondEtCadre(filtres);
+        JPanel panelFiltres = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        StyleUI.appliquerFondEtCadre(panelFiltres);
 
         champRechercheNom = new JTextField(10);
         champRechercheID = new JTextField(5);
@@ -63,16 +79,19 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
         comboAnnee.addItem(0);
         for (int i = anneeActuelle; i >= anneeActuelle - 5; i--) comboAnnee.addItem(i);
 
-        filtres.add(new JLabel("Nom utilisateur :"));
-        filtres.add(champRechercheNom);
-        filtres.add(new JLabel("ID facture :"));
-        filtres.add(champRechercheID);
-        filtres.add(new JLabel("Année :"));
-        filtres.add(comboAnnee);
+        panelFiltres.add(new JLabel("Nom utilisateur :"));
+        panelFiltres.add(champRechercheNom);
+        panelFiltres.add(new JLabel("ID facture :"));
+        panelFiltres.add(champRechercheID);
+        panelFiltres.add(new JLabel("Année :"));
+        panelFiltres.add(comboAnnee);
 
         JButton boutonFiltrer = new JButton("Filtrer");
-        boutonFiltrer.addActionListener(e -> chargerFactures());
-        filtres.add(boutonFiltrer);
+        boutonFiltrer.addActionListener(e -> {
+            pageActuelle = 1;
+            chargerFactures();
+        });
+        panelFiltres.add(boutonFiltrer);
 
         JButton boutonToutVoir = new JButton("Tout voir");
         boutonToutVoir.addActionListener(e -> {
@@ -82,34 +101,13 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
             pageActuelle = 1;
             chargerFactures();
         });
-        filtres.add(boutonToutVoir);
+        panelFiltres.add(boutonToutVoir);
 
         boutonExporterPDF = new JButton("Exporter PDF");
         boutonExporterPDF.addActionListener(e -> exporterPDF());
-        filtres.add(boutonExporterPDF);
+        panelFiltres.add(boutonExporterPDF);
 
-        JButton prec = new JButton("◀");
-        JButton suiv = new JButton("▶");
-        labelPage = new JLabel("Page 1");
-
-        prec.addActionListener(e -> {
-            if (pageActuelle > 1) {
-                pageActuelle--;
-                chargerFactures();
-            }
-        });
-        suiv.addActionListener(e -> {
-            if (pageActuelle * lignesParPage < facturesGlobales.size()) {
-                pageActuelle++;
-                chargerFactures();
-            }
-        });
-
-        filtres.add(prec);
-        filtres.add(labelPage);
-        filtres.add(suiv);
-
-        add(filtres, BorderLayout.SOUTH);
+        add(panelFiltres, BorderLayout.SOUTH);
 
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
@@ -119,8 +117,11 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
                     String nomClient = model.getValueAt(row, 2).toString();
                     Utilisateur u = new UtilisateurDAO().getUtilisateurParNom(nomClient);
                     if (u != null) {
-                        mainWindow.ajouterVue("detailFacture", new VueDetailFacture(idFacture, u, mainWindow));
-                        mainWindow.switchTo("detailFacture");
+                        VueDetailFacture vueDetail = new VueDetailFacture(idFacture, u, mainWindow);
+                        mainWindow.ajouterVue("detailFacture" + idFacture, vueDetail);
+                        mainWindow.switchTo("detailFacture" + idFacture);
+                    } else {
+                        JOptionPane.showMessageDialog(VueHistoriqueCommandesAdmin.this, "Utilisateur introuvable pour cette facture.");
                     }
                 }
             }
@@ -137,15 +138,15 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
         String idTexte = champRechercheID.getText().trim();
         int annee = (int) comboAnnee.getSelectedItem();
 
-        List<Facture> filtrees = facturesGlobales.stream()
+        facturesFiltrees = facturesGlobales.stream()
                 .filter(f -> nom.isEmpty() || f.getClient().getNom().toLowerCase().contains(nom))
                 .filter(f -> idTexte.isEmpty() || ("" + f.getId()).contains(idTexte))
                 .filter(f -> annee == 0 || f.getDate().getYear() == annee)
                 .toList();
 
         int debut = (pageActuelle - 1) * lignesParPage;
-        int fin = Math.min(debut + lignesParPage, filtrees.size());
-        List<Facture> page = filtrees.subList(debut, fin);
+        int fin = Math.min(debut + lignesParPage, facturesFiltrees.size());
+        List<Facture> page = facturesFiltrees.subList(debut, fin);
 
         model.setRowCount(0);
         for (Facture f : page) {
@@ -159,7 +160,7 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
             });
         }
 
-        int totalPages = (int) Math.ceil((double) filtrees.size() / lignesParPage);
+        int totalPages = (int) Math.ceil((double) facturesFiltrees.size() / lignesParPage);
         labelPage.setText("Page " + pageActuelle + " / " + (totalPages == 0 ? 1 : totalPages));
     }
 
@@ -192,15 +193,16 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
             tablePDF.addCell("Total");
             tablePDF.addCell("Remise");
 
-            for (int i = 0; i < model.getRowCount(); i++) {
-                for (int j = 0; j < model.getColumnCount(); j++) {
-                    tablePDF.addCell(model.getValueAt(i, j).toString());
-                }
+            for (Facture f : facturesFiltrees) {
+                tablePDF.addCell(f.getDateFormatee());
+                tablePDF.addCell(String.valueOf(f.getId()));
+                tablePDF.addCell(f.getClient().getNom());
+                tablePDF.addCell(String.format("%.2f €", f.getMontantTotal()));
+                double remise = f.getLignes() != null ? f.getLignes().stream().mapToDouble(l -> l.getPrix() * l.getQuantite()).sum() * f.getRemisePourcent() / 100 : 0;
+                tablePDF.addCell(String.format("%.2f €", remise));
             }
 
             document.add(tablePDF);
-            document.add(new Paragraph(" "));
-            document.add(new Paragraph("Export effectué le : " + java.time.LocalDate.now()));
             document.close();
 
             JOptionPane.showMessageDialog(this, "PDF exporté avec succès :\n" + path);

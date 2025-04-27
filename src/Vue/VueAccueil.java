@@ -6,17 +6,22 @@ import modele.Utilisateur;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 import java.util.List;
 
 public class VueAccueil extends JPanel {
+
     private final MainWindow mainWindow;
     private final JLabel bienvenueLabel;
     private final JButton boutonCatalogue;
-    private final JButton boutonConnexion;
+    private final JButton boutonConnexionOuInfos;
     private final JButton boutonPanier;
     private final JButton boutonHistorique;
     private final JButton boutonDeconnexion;
+    private final JButton boutonAdminProduits;
+    private final JButton boutonAdminReductions;
+    private final JButton boutonAdminStats;
     private final JPanel carrouselPanel;
     private final Timer carrouselTimer;
     private int carrouselIndex = 0;
@@ -28,7 +33,7 @@ public class VueAccueil extends JPanel {
         StyleUI.appliquerFondEtCadre(this);
 
         // --- Logo ---
-        ImageIcon logo = new ImageIcon(getClass().getResource("logoBTTShopping.png"));
+        ImageIcon logo = new ImageIcon(getClass().getResource("/Vue/logoBTTShopping.png"));
         Image imgReduite = logo.getImage().getScaledInstance(
                 logo.getIconWidth() / 4,
                 logo.getIconHeight() / 4,
@@ -38,7 +43,7 @@ public class VueAccueil extends JPanel {
         logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
         add(logoLabel, BorderLayout.NORTH);
 
-        // --- Centre avec message + boutons ---
+        // --- Centre (boutons + message) ---
         JPanel centre = new JPanel();
         centre.setLayout(new BoxLayout(centre, BoxLayout.Y_AXIS));
         centre.setBorder(BorderFactory.createEmptyBorder(30, 80, 10, 80));
@@ -51,12 +56,19 @@ public class VueAccueil extends JPanel {
         centre.add(Box.createRigidArea(new Dimension(0, 20)));
 
         boutonCatalogue = new JButton("🛍️ Catalogue Produits");
-        boutonConnexion = new JButton("🔑 Connexion");
+        boutonConnexionOuInfos = new JButton(); // texte mis à jour dynamiquement
         boutonPanier = new JButton("🛒 Mon Panier");
-        boutonHistorique = new JButton("📄 Historique de Factures");
+        boutonHistorique = new JButton("📄 Mes Factures");
         boutonDeconnexion = new JButton("🚪 Déconnexion");
 
-        for (JButton btn : new JButton[]{boutonCatalogue, boutonConnexion, boutonPanier, boutonHistorique, boutonDeconnexion}) {
+        boutonAdminProduits = new JButton("📦 Gérer Produits");
+        boutonAdminReductions = new JButton("🏷️ Gérer Réductions");
+        boutonAdminStats = new JButton("📊 Voir Statistiques");
+
+        for (JButton btn : new JButton[]{
+                boutonCatalogue, boutonConnexionOuInfos, boutonPanier, boutonHistorique,
+                boutonAdminProduits, boutonAdminReductions, boutonAdminStats, boutonDeconnexion
+        }) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMaximumSize(new Dimension(250, 40));
             StyleUI.styliserBouton(btn);
@@ -66,7 +78,7 @@ public class VueAccueil extends JPanel {
 
         add(centre, BorderLayout.CENTER);
 
-        // --- Carrousel avec flèches ---
+        // --- Bas (carrousel) ---
         JPanel bas = new JPanel(new BorderLayout());
         StyleUI.appliquerFondEtCadre(bas);
 
@@ -88,30 +100,57 @@ public class VueAccueil extends JPanel {
 
         add(bas, BorderLayout.SOUTH);
 
-        // Listeners principaux
+        // --- Listeners principaux ---
         boutonCatalogue.addActionListener(e -> mainWindow.switchTo("catalogue"));
-        boutonConnexion.addActionListener(e -> mainWindow.switchTo("connexion"));
-        boutonPanier.addActionListener(e -> {
+
+        boutonConnexionOuInfos.addActionListener(e -> {
             Utilisateur u = mainWindow.getUtilisateurConnecte();
-            if (u != null) mainWindow.switchTo("panier");
-            else {
+            if (u != null) {
+                mainWindow.switchTo("moncompte"); // la vue "moncompte" sera créée juste après
+            } else {
+                mainWindow.switchTo("connexion");
+            }
+        });
+
+        boutonPanier.addActionListener(e -> {
+            if (mainWindow.getUtilisateurConnecte() != null) {
+                mainWindow.switchTo("panier");
+            } else {
                 JOptionPane.showMessageDialog(mainWindow, "Veuillez vous connecter pour accéder au panier.");
                 mainWindow.switchTo("connexion");
             }
         });
+
         boutonHistorique.addActionListener(e -> {
             Utilisateur u = mainWindow.getUtilisateurConnecte();
-            VueHistoriqueFactures vueHisto = new VueHistoriqueFactures(u, mainWindow);
-            mainWindow.ajouterVue("historique", vueHisto);
-            mainWindow.switchTo("historique");
+            if (u != null) {
+                mainWindow.switchTo("historique");
+            } else {
+                JOptionPane.showMessageDialog(mainWindow, "Veuillez vous connecter.");
+            }
         });
+
         boutonDeconnexion.addActionListener(e -> {
             mainWindow.setUtilisateurConnecte(null);
-            JOptionPane.showMessageDialog(mainWindow, "Déconnexion réussie.");
+            JOptionPane.showMessageDialog(mainWindow, "Déconnexion réussie !");
             mainWindow.switchTo("accueil");
         });
 
-        // Carrousel initialisé avec 15 produits aléatoires
+        boutonAdminProduits.addActionListener(e -> {
+            mainWindow.chargerVueAdmin();
+            mainWindow.switchTo("admin");
+        });
+
+        boutonAdminReductions.addActionListener(e -> {
+            mainWindow.chargerVueReductions();
+            mainWindow.switchTo("reductions");
+        });
+
+        boutonAdminStats.addActionListener(e -> {
+            mainWindow.switchTo("statistiques");
+        });
+
+        // --- Carrousel produits ---
         produitsCarrousel = new ProduitDAO().getProduitsAleatoires(15);
         rafraichirCarrousel();
 
@@ -126,26 +165,22 @@ public class VueAccueil extends JPanel {
         rafraichirCarrousel();
     }
 
-
-
     private void rafraichirCarrousel() {
         carrouselPanel.removeAll();
         for (int i = 0; i < 5; i++) {
             int index = (carrouselIndex + i) % produitsCarrousel.size();
-            Produit produitCourant = produitsCarrousel.get(index);  // 🔥 Correction ici
-            JPanel carte = ComposantsUI.creerCarteProduit(produitCourant, mainWindow);
+            Produit p = produitsCarrousel.get(index);
+            JPanel carte = ComposantsUI.creerCarteProduit(p, mainWindow);
 
             carte.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             carte.addMouseListener(new MouseAdapter() {
                 public void mouseClicked(MouseEvent e) {
-                    VueDetailProduit vue = new VueDetailProduit(mainWindow, produitCourant, true);  // 🔥 Correction ici aussi
+                    VueDetailProduit vue = new VueDetailProduit(mainWindow, p, true);
                     vue.setVisible(true);
                 }
-
                 public void mouseEntered(MouseEvent e) {
                     carte.setBorder(BorderFactory.createLineBorder(Color.RED, 2));
                 }
-
                 public void mouseExited(MouseEvent e) {
                     carte.setBorder(BorderFactory.createLineBorder(Color.BLACK));
                 }
@@ -157,17 +192,24 @@ public class VueAccueil extends JPanel {
         carrouselPanel.repaint();
     }
 
-
     public void mettreAJourAffichage() {
         Utilisateur u = mainWindow.getUtilisateurConnecte();
         boolean connecte = (u != null);
+        boolean admin = connecte && u.isEstAdmin();
+
         bienvenueLabel.setText(connecte
                 ? "Bonjour " + u.getPrenom() + " " + u.getNom() + " !"
                 : "Qu’est-ce qui te ferait plaisir aujourd’hui ?");
 
-        boutonConnexion.setVisible(!connecte);
+        boutonConnexionOuInfos.setText(connecte ? "👤 Mon Compte" : "🔑 Connexion");
+        boutonConnexionOuInfos.setVisible(true);
         boutonHistorique.setVisible(connecte);
         boutonPanier.setVisible(true);
         boutonDeconnexion.setVisible(connecte);
+
+        // Admin uniquement
+        boutonAdminProduits.setVisible(admin);
+        boutonAdminReductions.setVisible(admin);
+        boutonAdminStats.setVisible(admin);
     }
 }

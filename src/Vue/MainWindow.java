@@ -2,6 +2,7 @@ package Vue;
 
 import modele.Panier;
 import modele.Utilisateur;
+import modele.Facture;
 
 import javax.swing.*;
 import java.awt.*;
@@ -35,8 +36,10 @@ public class MainWindow extends JFrame {
         ajouterVue("inscription", new VueInscription(this));
         ajouterVue("accueilAdmin", new VueAccueilAdmin(this));
         ajouterVue("historique", new VueHistoriqueCommandes(this));
-        ajouterVue("statistiques", new VueStatistiques(this)); // ✅ renommé pour correspondre
+        ajouterVue("statistiques", new VueStatistiques(this));
         ajouterVue("motdepasseoublie", new VueMotDePasseOublie(this));
+        ajouterVue("moncompte", new VueMonCompte(this));
+        ajouterVue("paiement", new VuePaiement(this));
 
         // Préchargement du catalogue
         chargerCatalogue();
@@ -44,7 +47,6 @@ public class MainWindow extends JFrame {
         // Affichage de la première vue
         setContentPane(mainPanel);
         switchTo("accueil");
-
 
         setVisible(true);
     }
@@ -75,7 +77,6 @@ public class MainWindow extends JFrame {
         vueActuelle = viewName;
         cardLayout.show(mainPanel, viewName);
 
-        // 🔄 Mise à jour dynamique de certaines vues
         if ("accueil".equals(viewName)) {
             VueAccueil accueil = (VueAccueil) vues.get("accueil");
             accueil.mettreAJourAffichage();
@@ -85,7 +86,7 @@ public class MainWindow extends JFrame {
             panierView.rafraichir();
         }
         if ("catalogue".equals(viewName)) {
-            chargerCatalogue(); // Recharge sécurisé
+            chargerCatalogue();
         }
     }
 
@@ -141,5 +142,39 @@ public class MainWindow extends JFrame {
             VueGestionReductions vue = new VueGestionReductions(this);
             ajouterVue("reductions", vue);
         }
+    }
+
+    public void chargerVueHistoriqueCommandesAdmin() {
+        if (!vues.containsKey("historiqueAdmin")) {
+            VueHistoriqueCommandesAdmin vue = new VueHistoriqueCommandesAdmin(this);
+            ajouterVue("historiqueAdmin", vue);
+        }
+    }
+
+    public void chargerVueMonCompte() {
+        if (!vues.containsKey("moncompte")) {
+            VueMonCompte vue = new VueMonCompte(this);
+            ajouterVue("moncompte", vue);
+        }
+    }
+
+    public void chargerVueDetailFacture(int idFacture, Utilisateur client) {
+        VueDetailFacture vue = new VueDetailFacture(idFacture, client, this);
+        ajouterVue("detailFacture" + idFacture, vue);
+        switchTo("detailFacture" + idFacture);
+    }
+
+    public void chargerVueNouvelleFacture(Facture facture) {
+        VueNouvelleFacture vue = new VueNouvelleFacture(this, facture);
+        ajouterVue("nouvelleFacture", vue);
+        switchTo("nouvelleFacture");
+    }
+
+    public void chargerVueHistoriqueFactures() {
+        if (!vues.containsKey("historiqueFactures")) {
+            VueHistoriqueFactures vue = new VueHistoriqueFactures(utilisateurConnecte, this);
+            ajouterVue("historiqueFactures", vue);
+        }
+        switchTo("historiqueFactures");
     }
 }

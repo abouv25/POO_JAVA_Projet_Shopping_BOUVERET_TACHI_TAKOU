@@ -83,14 +83,7 @@ public class VueHistoriqueFactures extends JPanel {
         // ✅ Filtre 2025
         if (checkBox2025.isSelected()) {
             factures = factures.stream()
-                    .filter(f -> {
-                        try {
-                            LocalDate date = LocalDate.parse(f.getDateFormatee());
-                            return date.getYear() == 2025;
-                        } catch (Exception e) {
-                            return false;
-                        }
-                    })
+                    .filter(f -> f.getDate().getYear() == 2025)
                     .collect(Collectors.toList());
         }
 
@@ -102,13 +95,14 @@ public class VueHistoriqueFactures extends JPanel {
                     factures.sort(Comparator.comparingDouble(Facture::getMontantTotal));
                     break;
                 case "Tri par Date décroissante":
-                    factures.sort(Comparator.comparing(Facture::getDateFormatee).reversed());
+                    factures.sort(Comparator.comparing(Facture::getDate).reversed());
                     break;
             }
         }
 
         chargerFacturesDansTableau(factures);
     }
+
 
     private void chargerFacturesDansTableau(List<Facture> factures) {
         DefaultTableModel model = new DefaultTableModel(

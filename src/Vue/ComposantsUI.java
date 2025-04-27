@@ -5,90 +5,90 @@ import modele.Utilisateur;
 
 import javax.swing.*;
 import java.awt.*;
-import java.io.File;
 
 public class ComposantsUI {
 
     public static JPanel creerBarreSuperieure(MainWindow mainWindow) {
         JPanel barre = new JPanel(new BorderLayout());
         barre.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
-        barre.setBackground(Color.LIGHT_GRAY);
+        barre.setBackground(Color.WHITE);
 
-        // ✅ Logo cliquable et redimensionné
-        JLabel logoLabel;
+        // --- Logo cliquable ---
+        JButton logoButton;
         try {
             ImageIcon logo = new ImageIcon(ComposantsUI.class.getResource("/Vue/logoBTTShopping.png"));
-            Image imageReduite = logo.getImage().getScaledInstance(
-                    logo.getIconWidth() / 4,
-                    logo.getIconHeight() / 4,
-                    Image.SCALE_SMOOTH
-            );
-            logoLabel = new JLabel(new ImageIcon(imageReduite));
+            Image img = logo.getImage().getScaledInstance(60, 60, Image.SCALE_SMOOTH);
+            logoButton = new JButton(new ImageIcon(img));
+            logoButton.setBorderPainted(false);
+            logoButton.setContentAreaFilled(false);
         } catch (Exception e) {
-            System.err.println("Erreur chargement du logo : " + e.getMessage());
-            logoLabel = new JLabel("BTT Shopping");
+            logoButton = new JButton("BTT Shopping");
         }
 
-        logoLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        logoLabel.addMouseListener(new java.awt.event.MouseAdapter() {
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                if (mainWindow != null) {
-                    int confirm = JOptionPane.showConfirmDialog(mainWindow, "Retour à l'accueil ?", "Confirmation", JOptionPane.YES_NO_OPTION);
-                    if (confirm == JOptionPane.YES_OPTION) {
-                        mainWindow.switchTo("accueil");
-                    }
-                }
-            }
-        });
+        logoButton.addActionListener(e -> mainWindow.switchTo("accueil"));
+        barre.add(logoButton, BorderLayout.WEST);
 
-        barre.add(logoLabel, BorderLayout.WEST);
-
-        // ✅ Centre : boutons admin si connecté
+        // --- Centre : boutons admin ---
         JPanel centre = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         centre.setOpaque(false);
 
         Utilisateur u = mainWindow.getUtilisateurConnecte();
         if (u != null && u.isEstAdmin()) {
-            JButton btnAdmin = new JButton("Produits");
-            JButton btnStats = new JButton("Statistiques");
-            JButton btnUtilisateurs = new JButton("Utilisateurs");
+            JButton btnAdminProduits = new JButton("📦 Produits");
+            JButton btnStats = new JButton("📊 Statistiques");
+            JButton btnUtilisateurs = new JButton("👥 Utilisateurs");
 
-            btnAdmin.addActionListener(e -> mainWindow.switchTo("admin"));
+            btnAdminProduits.addActionListener(e -> mainWindow.chargerVueAdmin());
+            btnAdminProduits.addActionListener(e -> mainWindow.switchTo("admin"));
+
             btnStats.addActionListener(e -> mainWindow.switchTo("statistiques"));
+
+            btnUtilisateurs.addActionListener(e -> mainWindow.chargerVueGestionUtilisateurs());
             btnUtilisateurs.addActionListener(e -> mainWindow.switchTo("gestionUtilisateurs"));
 
-            centre.add(btnAdmin);
-            centre.add(btnStats);
-            centre.add(btnUtilisateurs);
+            for (JButton btn : new JButton[]{btnAdminProduits, btnStats, btnUtilisateurs}) {
+                StyleUI.styliserBouton(btn);
+                centre.add(btn);
+            }
         }
 
         barre.add(centre, BorderLayout.CENTER);
 
-        // ✅ Droite : état utilisateur + bouton panier
+        // --- Droite : bouton utilisateur + panier ---
         JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         droite.setOpaque(false);
 
-        JLabel infoUtilisateur = new JLabel();
-        infoUtilisateur.setFont(new Font("SansSerif", Font.PLAIN, 14));
+        JButton boutonUtilisateur = new JButton();
+        JButton boutonPanier = new JButton("🛒 Mon Panier");
 
         if (u != null) {
-            infoUtilisateur.setText("👤 " + u.getPrenom() + " " + u.getNom());
+            boutonUtilisateur.setText("👤 Mon compte");
         } else {
-            infoUtilisateur.setText("🔐 S’identifier");
-            infoUtilisateur.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-            infoUtilisateur.addMouseListener(new java.awt.event.MouseAdapter() {
-                public void mouseClicked(java.awt.event.MouseEvent evt) {
-                    mainWindow.switchTo("connexion");
-                }
-            });
+            boutonUtilisateur.setText("🔑 S'identifier");
         }
 
-        JButton boutonPanier = new JButton("🛍️ Voir Panier");
-        boutonPanier.setFocusPainted(false);
-        boutonPanier.setFont(new Font("SansSerif", Font.PLAIN, 13));
-        boutonPanier.addActionListener(e -> mainWindow.switchTo("panier"));
+        boutonUtilisateur.addActionListener(e -> {
+            Utilisateur utilisateur = mainWindow.getUtilisateurConnecte();
+            if (utilisateur != null) {
+                mainWindow.switchTo("moncompte");
+            } else {
+                mainWindow.switchTo("connexion");
+            }
+        });
 
-        droite.add(infoUtilisateur);
+        boutonPanier.addActionListener(e -> {
+            if (mainWindow.getUtilisateurConnecte() != null) {
+                mainWindow.switchTo("panier");
+            } else {
+                JOptionPane.showMessageDialog(mainWindow, "Veuillez vous connecter pour accéder au panier.");
+                mainWindow.switchTo("connexion");
+            }
+        });
+
+        StyleUI.styliserBouton(boutonUtilisateur);
+        StyleUI.styliserBouton(boutonPanier);
+
+        droite.add(boutonUtilisateur);
         droite.add(boutonPanier);
 
         barre.add(droite, BorderLayout.EAST);
@@ -117,18 +117,18 @@ public class ComposantsUI {
         ));
         carte.setOpaque(false);
 
-        // ✅ Image produit sécurisée
-        JLabel imageLabel;
-        if (p.getImage() != null && new File(p.getImage()).exists()) {
-            try {
-                ImageIcon icon = new ImageIcon(p.getImage());
-                Image img = icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
-                imageLabel = new JLabel(new ImageIcon(img));
-            } catch (Exception e) {
-                imageLabel = new JLabel("Image indisponible");
+        // --- Image produit ---
+        JLabel imageLabel = new JLabel();
+        try {
+            if (p.getImage() != null) {
+                ImageIcon imgIcon = new ImageIcon(p.getImage());
+                Image img = imgIcon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
+                imageLabel.setIcon(new ImageIcon(img));
+            } else {
+                imageLabel.setText("Pas d'image");
             }
-        } else {
-            imageLabel = new JLabel("Image indisponible");
+        } catch (Exception e) {
+            imageLabel.setText("Image indisponible");
         }
 
         imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -136,13 +136,12 @@ public class ComposantsUI {
 
         carte.add(Box.createVerticalStrut(10));
 
-        // ✅ Nom produit
+        // --- Infos produit ---
         JLabel nomLabel = new JLabel(p.getNom(), SwingConstants.CENTER);
         nomLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         nomLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         carte.add(nomLabel);
 
-        // ✅ Prix produit
         JLabel prixLabel = new JLabel(String.format("%.2f €", p.getPrix()), SwingConstants.CENTER);
         prixLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
         prixLabel.setForeground(Color.DARK_GRAY);
@@ -151,13 +150,13 @@ public class ComposantsUI {
 
         carte.add(Box.createVerticalStrut(8));
 
-        // ✅ Bouton Voir Produit
-        JButton boutonVoir = new JButton("Voir le produit");
+        JButton boutonVoir = new JButton("Voir Produit");
         boutonVoir.setFont(new Font("SansSerif", Font.PLAIN, 12));
         boutonVoir.setBackground(Color.WHITE);
         boutonVoir.setBorder(BorderFactory.createLineBorder(Color.BLACK));
         boutonVoir.setFocusPainted(false);
         boutonVoir.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         boutonVoir.addActionListener(e -> {
             VueDetailProduit vue = new VueDetailProduit(mainWindow, p, true);
             vue.setVisible(true);

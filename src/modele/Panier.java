@@ -60,4 +60,5 @@ public class Panier {
     public boolean estVide() {
         return lignes.isEmpty();
     }
+
 }

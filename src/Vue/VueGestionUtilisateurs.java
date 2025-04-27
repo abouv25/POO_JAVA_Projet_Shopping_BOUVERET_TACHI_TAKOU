@@ -79,12 +79,9 @@ public class VueGestionUtilisateurs extends JPanel {
         JPanel centre = new JPanel(new FlowLayout());
         boutonAjouter = new JButton("➕ Ajouter un utilisateur");
         boutonAjouter.addActionListener(e -> {
-            Utilisateur nouvelUtilisateur = new Utilisateur();
-            ModifierUtilisateurDialog dialog = new ModifierUtilisateurDialog(mainWindow, nouvelUtilisateur);
-            dialog.setVisible(true);
-            if (dialog.isModifie()) {
-                chargerUtilisateurs();
-            }
+            VueAjoutUtilisateur vueAjout = new VueAjoutUtilisateur(mainWindow);
+            mainWindow.ajouterVue("ajoutUtilisateur", vueAjout);
+            mainWindow.switchTo("ajoutUtilisateur");
         });
         centre.add(boutonAjouter);
 
@@ -122,7 +119,7 @@ public class VueGestionUtilisateurs extends JPanel {
         chargerUtilisateurs();
     }
 
-    private void chargerUtilisateurs() {
+    public void chargerUtilisateurs() {
         UtilisateurDAO dao = new UtilisateurDAO();
         tousLesUtilisateurs = dao.listerUtilisateurs();
 
