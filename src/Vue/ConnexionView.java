@@ -5,8 +5,6 @@ import modele.Utilisateur;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class ConnexionView extends JPanel {
 
@@ -15,13 +13,24 @@ public class ConnexionView extends JPanel {
     public ConnexionView(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
 
-        setLayout(new GridBagLayout());
+        setLayout(new BorderLayout());
+        StyleUI.appliquerFondEtCadre(this);
+
+        // Bandeau haut avec barre de navigation
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
+
+        // Titre
+        JLabel titre = new JLabel("Connectez-vous pour accéder à votre espace personnel", SwingConstants.CENTER);
+        StyleUI.styliserTitre(titre);
+        add(titre, BorderLayout.NORTH);
+
+        // Centre de la page
+        JPanel centre = new JPanel(new GridBagLayout());
+        StyleUI.appliquerFondEtCadre(centre);
         GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
 
-        JLabel title = new JLabel("Connexion");
-        title.setFont(new Font("Arial", Font.BOLD, 24));
-
-        JLabel emailLabel = new JLabel("Email :");
+        JLabel emailLabel = new JLabel("Adresse Email :");
         JTextField emailField = new JTextField(20);
 
         JLabel passwordLabel = new JLabel("Mot de passe :");
@@ -29,68 +38,55 @@ public class ConnexionView extends JPanel {
 
         JButton loginButton = new JButton("Se connecter");
         JButton signupButton = new JButton("S'inscrire");
-        JButton accueilButton = new JButton("Accueil");
+        JButton accueilButton = new JButton("🏠 Accueil");
 
-        // Action de connexion
-        loginButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                String email = emailField.getText();
-                String password = new String(passwordField.getPassword());
-
-                UtilisateurDAO dao = new UtilisateurDAO();
-
-                Utilisateur utilisateur = dao.verifierConnexion(email, password);
-
-                if (utilisateur != null) {
-                    JOptionPane.showMessageDialog(mainWindow, "Connexion réussie !");
-                    mainWindow.setUtilisateurConnecte(utilisateur);
-
-                    // Chargement dynamique de VueProduits
-                    mainWindow.chargerCatalogue();
-                    mainWindow.switchTo("catalogue");
-                } else {
-                    JOptionPane.showMessageDialog(mainWindow, "Identifiants incorrects.");
-                }
-            }
-        });
-
-        // Action d'inscription
-        signupButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                mainWindow.switchTo("inscription");  // Passer à la page d'inscription
-            }
-        });
-
-        // Action pour revenir à l'accueil
-        accueilButton.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent e) {
-                mainWindow.switchTo("accueil");
-            }
-        });
+        // Styliser les boutons
+        StyleUI.styliserBouton(loginButton);
+        StyleUI.styliserBouton(signupButton);
+        StyleUI.styliserBouton(accueilButton);
 
         // Mise en page
-        gbc.insets = new Insets(10, 10, 10, 10);
-        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
-        add(title, gbc);
-
-        gbc.gridwidth = 1;
-        gbc.gridy++;
-        add(emailLabel, gbc);
+        gbc.gridx = 0; gbc.gridy = 0;
+        centre.add(emailLabel, gbc);
         gbc.gridx = 1;
-        add(emailField, gbc);
+        centre.add(emailField, gbc);
 
         gbc.gridx = 0; gbc.gridy++;
-        add(passwordLabel, gbc);
+        centre.add(passwordLabel, gbc);
         gbc.gridx = 1;
-        add(passwordField, gbc);
+        centre.add(passwordField, gbc);
 
-        gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2;
-        add(loginButton, gbc);
+        gbc.gridx = 0; gbc.gridy++;
+        gbc.gridwidth = 2;
+        centre.add(loginButton, gbc);
 
         gbc.gridy++;
-        add(signupButton, gbc);  // Ajout du bouton "S'inscrire"
+        centre.add(signupButton, gbc);
 
-        gbc.gridx = 0; gbc.gridy++; gbc.gridwidth = 2;
-        add(accueilButton, gbc);  // Ajout du bouton "Accueil"
+        gbc.gridy++;
+        centre.add(accueilButton, gbc);
+
+        add(centre, BorderLayout.CENTER);
+
+        // Actions des boutons
+        loginButton.addActionListener(e -> {
+            String email = emailField.getText().trim();
+            String password = new String(passwordField.getPassword());
+
+            UtilisateurDAO dao = new UtilisateurDAO();
+            Utilisateur utilisateur = dao.verifierConnexion(email, password);
+
+            if (utilisateur != null) {
+                JOptionPane.showMessageDialog(mainWindow, "Connexion réussie !");
+                mainWindow.setUtilisateurConnecte(utilisateur);
+                mainWindow.chargerCatalogue();
+                mainWindow.switchTo("catalogue");
+            } else {
+                JOptionPane.showMessageDialog(mainWindow, "Identifiants incorrects. Veuillez réessayer.");
+            }
+        });
+
+        signupButton.addActionListener(e -> mainWindow.switchTo("inscription"));
+        accueilButton.addActionListener(e -> mainWindow.switchTo("accueil"));
     }
 }

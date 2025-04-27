@@ -126,17 +126,19 @@ public class VueAccueil extends JPanel {
         rafraichirCarrousel();
     }
 
+
+
     private void rafraichirCarrousel() {
         carrouselPanel.removeAll();
         for (int i = 0; i < 5; i++) {
             int index = (carrouselIndex + i) % produitsCarrousel.size();
-            Produit p = produitsCarrousel.get(index);
-            JPanel carte = ComposantsUI.creerCarteProduit(p,mainWindow);
+            Produit produitCourant = produitsCarrousel.get(index);  // 🔥 Correction ici
+            JPanel carte = ComposantsUI.creerCarteProduit(produitCourant, mainWindow);
 
             carte.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
             carte.addMouseListener(new MouseAdapter() {
                 public void mouseClicked(MouseEvent e) {
-                    VueDetailProduit vue = new VueDetailProduit(p,true);
+                    VueDetailProduit vue = new VueDetailProduit(mainWindow, produitCourant, true);  // 🔥 Correction ici aussi
                     vue.setVisible(true);
                 }
 
@@ -154,6 +156,7 @@ public class VueAccueil extends JPanel {
         carrouselPanel.revalidate();
         carrouselPanel.repaint();
     }
+
 
     public void mettreAJourAffichage() {
         Utilisateur u = mainWindow.getUtilisateurConnecte();

@@ -1,4 +1,3 @@
-// package et imports identiques
 package Vue;
 
 import DAO.ProduitDAO;
@@ -45,6 +44,7 @@ public class VueProduits extends JPanel {
         champPrixMin = new JTextField();
         champPrixMax = new JTextField();
         checkBoxStock = new JCheckBox("En stock uniquement");
+
         JButton boutonFiltrer = new JButton("Appliquer les filtres");
         JButton boutonReset = new JButton("Réinitialiser");
 
@@ -58,10 +58,10 @@ public class VueProduits extends JPanel {
         filtres.add(suggestionPane);
 
         filtres.add(Box.createVerticalStrut(10));
-        filtres.add(new JLabel("Prix minimum :"));
+        filtres.add(new JLabel("Prix minimum (€) :"));
         filtres.add(champPrixMin);
         filtres.add(Box.createVerticalStrut(10));
-        filtres.add(new JLabel("Prix maximum :"));
+        filtres.add(new JLabel("Prix maximum (€) :"));
         filtres.add(champPrixMax);
         filtres.add(Box.createVerticalStrut(10));
         filtres.add(checkBoxStock);
@@ -75,14 +75,14 @@ public class VueProduits extends JPanel {
         // Centre = cartes produits
         panelCartes = new JPanel(new GridLayout(0, 3, 20, 20));
         panelCartes.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
-        panelCartes.setBackground(new Color(250, 250, 250));
+        panelCartes.setBackground(Color.WHITE);
 
         scrollPane = new JScrollPane(panelCartes);
         scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
         add(scrollPane, BorderLayout.CENTER);
 
-        // Actions
+        // 🔘 Actions
         boutonFiltrer.addActionListener(e -> appliquerFiltres());
 
         boutonReset.addActionListener(e -> {
@@ -96,22 +96,7 @@ public class VueProduits extends JPanel {
 
         champRecherche.addKeyListener(new KeyAdapter() {
             public void keyReleased(KeyEvent e) {
-                String input = champRecherche.getText().trim().toLowerCase();
-                if (input.isEmpty()) {
-                    suggestionPane.setVisible(false);
-                    return;
-                }
-                List<String> suggestions = tousLesProduits.stream()
-                        .map(p -> p.getNom())
-                        .filter(n -> n.toLowerCase().contains(input))
-                        .limit(10)
-                        .collect(Collectors.toList());
-                if (suggestions.isEmpty()) {
-                    suggestionPane.setVisible(false);
-                } else {
-                    suggestionList.setListData(suggestions.toArray(new String[0]));
-                    suggestionPane.setVisible(true);
-                }
+                updateSuggestions();
             }
         });
 
@@ -125,6 +110,7 @@ public class VueProduits extends JPanel {
             }
         });
 
+        // Chargement initial
         chargerProduits();
     }
 
@@ -153,10 +139,9 @@ public class VueProduits extends JPanel {
             afficherProduits(filtres);
 
         } catch (NumberFormatException e) {
-            JOptionPane.showMessageDialog(this, "Prix invalide.");
+            JOptionPane.showMessageDialog(this, "Veuillez entrer des prix valides.", "Erreur", JOptionPane.ERROR_MESSAGE);
         }
     }
-
 
     private void afficherProduits(List<Produit> produits) {
         panelCartes.removeAll();
@@ -173,13 +158,13 @@ public class VueProduits extends JPanel {
         carte.setPreferredSize(new Dimension(200, 280));
         carte.setBackground(Color.WHITE);
         carte.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.LIGHT_GRAY, 1, true),
+                BorderFactory.createLineBorder(Color.LIGHT_GRAY),
                 BorderFactory.createEmptyBorder(10, 10, 10, 10)
         ));
 
+        // 🖼️ Image
         JLabel imageLabel;
-        File imageFile = new File(produit.getImage());
-        if (imageFile.exists()) {
+        if (produit.getImage() != null && new File(produit.getImage()).exists()) {
             ImageIcon icon = new ImageIcon(produit.getImage());
             Image img = icon.getImage().getScaledInstance(160, 100, Image.SCALE_SMOOTH);
             imageLabel = new JLabel(new ImageIcon(img));
@@ -191,6 +176,7 @@ public class VueProduits extends JPanel {
 
         carte.add(Box.createVerticalStrut(10));
 
+        // 📝 Informations produit
         JLabel nomLabel = new JLabel(produit.getNom(), SwingConstants.CENTER);
         nomLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         nomLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -208,27 +194,15 @@ public class VueProduits extends JPanel {
 
         carte.add(Box.createVerticalStrut(10));
 
-        Produit produitFinal = produit; // 🔧 pour corriger l'erreur lambda
-
+        // 🔘 Boutons
         JButton boutonAjouter = new JButton("Ajouter au panier");
         boutonAjouter.setAlignmentX(Component.CENTER_ALIGNMENT);
-        boutonAjouter.addActionListener((ActionEvent e) -> {
-            String input = JOptionPane.showInputDialog(this, "Quantité à ajouter :", "1");
-            if (input == null) return;
-            try {
-                int qte = Integer.parseInt(input);
-                if (qte <= 0) throw new NumberFormatException();
-                mainWindow.getPanier().ajouterProduit(produitFinal.getId(), produitFinal.getNom(), produitFinal.getPrix(), qte);
-                JOptionPane.showMessageDialog(this, qte + " x " + produitFinal.getNom() + " ajouté(s) au panier.");
-            } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Quantité invalide.");
-            }
-        });
+        boutonAjouter.addActionListener(e -> ajouterAuPanier(produit));
 
         JButton boutonVoir = new JButton("Voir le produit");
         boutonVoir.setAlignmentX(Component.CENTER_ALIGNMENT);
         boutonVoir.addActionListener(e -> {
-            VueDetailProduit vue = new VueDetailProduit(produitFinal, true);
+            VueDetailProduit vue = new VueDetailProduit(mainWindow, produit, true);
             vue.setVisible(true);
         });
 
@@ -237,5 +211,37 @@ public class VueProduits extends JPanel {
         carte.add(boutonVoir);
 
         return carte;
+    }
+
+    private void ajouterAuPanier(Produit produit) {
+        String input = JOptionPane.showInputDialog(this, "Quantité à ajouter :", "1");
+        if (input == null) return;
+        try {
+            int quantite = Integer.parseInt(input);
+            if (quantite <= 0) throw new NumberFormatException();
+            mainWindow.getPanier().ajouterProduit(produit.getId(), produit.getNom(), produit.getPrix(), quantite);
+            JOptionPane.showMessageDialog(this, quantite + " x " + produit.getNom() + " ajouté(s) au panier.");
+        } catch (NumberFormatException ex) {
+            JOptionPane.showMessageDialog(this, "Quantité invalide.", "Erreur", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+
+    private void updateSuggestions() {
+        String input = champRecherche.getText().trim().toLowerCase();
+        if (input.isEmpty()) {
+            suggestionPane.setVisible(false);
+            return;
+        }
+        List<String> suggestions = tousLesProduits.stream()
+                .map(Produit::getNom)
+                .filter(nom -> nom.toLowerCase().contains(input))
+                .limit(10)
+                .collect(Collectors.toList());
+        if (suggestions.isEmpty()) {
+            suggestionPane.setVisible(false);
+        } else {
+            suggestionList.setListData(suggestions.toArray(new String[0]));
+            suggestionPane.setVisible(true);
+        }
     }
 }

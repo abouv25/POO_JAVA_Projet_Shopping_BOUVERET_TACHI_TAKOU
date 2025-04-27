@@ -5,6 +5,7 @@ import modele.Utilisateur;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 
 public class ComposantsUI {
 
@@ -13,28 +14,36 @@ public class ComposantsUI {
         barre.setBorder(BorderFactory.createEmptyBorder(5, 10, 5, 10));
         barre.setBackground(Color.LIGHT_GRAY);
 
-        // ✅ Logo cliquable
-        ImageIcon logo = null;
+        // ✅ Logo cliquable et redimensionné
+        JLabel logoLabel;
         try {
-            logo = new ImageIcon(ComposantsUI.class.getResource("/Vue/logoBTTShopping.png"));
+            ImageIcon logo = new ImageIcon(ComposantsUI.class.getResource("/Vue/logoBTTShopping.png"));
+            Image imageReduite = logo.getImage().getScaledInstance(
+                    logo.getIconWidth() / 4,
+                    logo.getIconHeight() / 4,
+                    Image.SCALE_SMOOTH
+            );
+            logoLabel = new JLabel(new ImageIcon(imageReduite));
         } catch (Exception e) {
             System.err.println("Erreur chargement du logo : " + e.getMessage());
-            logo = new ImageIcon(); // logo vide si erreur
+            logoLabel = new JLabel("BTT Shopping");
         }
 
-        JLabel logoLabel = new JLabel(logo);
         logoLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         logoLabel.addMouseListener(new java.awt.event.MouseAdapter() {
             public void mouseClicked(java.awt.event.MouseEvent evt) {
-                int confirm = JOptionPane.showConfirmDialog(mainWindow, "Retour à l'accueil ?", "Confirmation", JOptionPane.YES_NO_OPTION);
-                if (confirm == JOptionPane.YES_OPTION) {
-                    mainWindow.switchTo("accueil");
+                if (mainWindow != null) {
+                    int confirm = JOptionPane.showConfirmDialog(mainWindow, "Retour à l'accueil ?", "Confirmation", JOptionPane.YES_NO_OPTION);
+                    if (confirm == JOptionPane.YES_OPTION) {
+                        mainWindow.switchTo("accueil");
+                    }
                 }
             }
         });
+
         barre.add(logoLabel, BorderLayout.WEST);
 
-        // ✅ Panneau au centre pour les boutons admin si admin connecté
+        // ✅ Centre : boutons admin si connecté
         JPanel centre = new JPanel(new FlowLayout(FlowLayout.CENTER, 10, 0));
         centre.setOpaque(false);
 
@@ -55,7 +64,7 @@ public class ComposantsUI {
 
         barre.add(centre, BorderLayout.CENTER);
 
-        // ✅ Panneau à droite : utilisateur + bouton panier
+        // ✅ Droite : état utilisateur + bouton panier
         JPanel droite = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         droite.setOpaque(false);
 
@@ -74,7 +83,6 @@ public class ComposantsUI {
             });
         }
 
-        // ✅ Bouton Voir Panier
         JButton boutonPanier = new JButton("🛍️ Voir Panier");
         boutonPanier.setFocusPainted(false);
         boutonPanier.setFont(new Font("SansSerif", Font.PLAIN, 13));
@@ -109,28 +117,32 @@ public class ComposantsUI {
         ));
         carte.setOpaque(false);
 
-        // ✅ Image
-        try {
-            ImageIcon icon = new ImageIcon(p.getImage());
-            Image img = icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
-            JLabel imageLabel = new JLabel(new ImageIcon(img));
-            imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            carte.add(imageLabel);
-        } catch (Exception e) {
-            JLabel imageLabel = new JLabel("Image indisponible");
-            imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-            carte.add(imageLabel);
+        // ✅ Image produit sécurisée
+        JLabel imageLabel;
+        if (p.getImage() != null && new File(p.getImage()).exists()) {
+            try {
+                ImageIcon icon = new ImageIcon(p.getImage());
+                Image img = icon.getImage().getScaledInstance(120, 120, Image.SCALE_SMOOTH);
+                imageLabel = new JLabel(new ImageIcon(img));
+            } catch (Exception e) {
+                imageLabel = new JLabel("Image indisponible");
+            }
+        } else {
+            imageLabel = new JLabel("Image indisponible");
         }
+
+        imageLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        carte.add(imageLabel);
 
         carte.add(Box.createVerticalStrut(10));
 
-        // ✅ Nom
+        // ✅ Nom produit
         JLabel nomLabel = new JLabel(p.getNom(), SwingConstants.CENTER);
         nomLabel.setFont(new Font("SansSerif", Font.BOLD, 14));
         nomLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         carte.add(nomLabel);
 
-        // ✅ Prix
+        // ✅ Prix produit
         JLabel prixLabel = new JLabel(String.format("%.2f €", p.getPrix()), SwingConstants.CENTER);
         prixLabel.setFont(new Font("SansSerif", Font.PLAIN, 13));
         prixLabel.setForeground(Color.DARK_GRAY);
@@ -139,7 +151,7 @@ public class ComposantsUI {
 
         carte.add(Box.createVerticalStrut(8));
 
-        // ✅ Bouton Voir le produit (mode consultation seule)
+        // ✅ Bouton Voir Produit
         JButton boutonVoir = new JButton("Voir le produit");
         boutonVoir.setFont(new Font("SansSerif", Font.PLAIN, 12));
         boutonVoir.setBackground(Color.WHITE);
@@ -147,12 +159,12 @@ public class ComposantsUI {
         boutonVoir.setFocusPainted(false);
         boutonVoir.setAlignmentX(Component.CENTER_ALIGNMENT);
         boutonVoir.addActionListener(e -> {
-            VueDetailProduit vue = new VueDetailProduit(p, true); // 👈 consultation seule
+            VueDetailProduit vue = new VueDetailProduit(mainWindow, p, true);
             vue.setVisible(true);
         });
 
         carte.add(boutonVoir);
+
         return carte;
     }
-
 }

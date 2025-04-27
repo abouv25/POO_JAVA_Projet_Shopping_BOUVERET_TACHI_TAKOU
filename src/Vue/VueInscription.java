@@ -29,24 +29,25 @@ public class VueInscription extends JPanel {
         setLayout(new BorderLayout());
         StyleUI.appliquerFondEtCadre(this);
 
+        // Barre supérieure
         add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
-        JLabel titre = new JLabel("Créer un compte", SwingConstants.CENTER);
-        StyleUI.styliserTitre(titre);
-        add(titre, BorderLayout.NORTH);
 
-        JPanel centre = new JPanel(new GridLayout(13, 2, 8, 8));
+        JPanel centre = new JPanel(new GridBagLayout());
+        GridBagConstraints gbc = new GridBagConstraints();
         centre.setBorder(BorderFactory.createEmptyBorder(20, 40, 20, 40));
         StyleUI.appliquerFondEtCadre(centre);
 
-        champNom = new JTextField();
-        champPrenom = new JTextField();
-        champEmail = new JTextField();
-        champMotDePasse = new JPasswordField();
-        champConfirmation = new JPasswordField();
+        JLabel titre = new JLabel("Créer un compte");
+        StyleUI.styliserTitre(titre);
+
+        champNom = new JTextField(20);
+        champPrenom = new JTextField(20);
+        champEmail = new JTextField(20);
+        champMotDePasse = new JPasswordField(20);
+        champConfirmation = new JPasswordField(20);
         checkBoxFidele = new JCheckBox("Client fidèle");
         checkBoxAdmin = new JCheckBox("Compte administrateur");
 
-        // Questions de sécurité
         List<String> questions = Arrays.asList(
                 "Nom de votre premier animal ?",
                 "Ville de naissance ?",
@@ -57,50 +58,89 @@ public class VueInscription extends JPanel {
         comboQ1 = new JComboBox<>(questions.toArray(new String[0]));
         comboQ2 = new JComboBox<>(questions.toArray(new String[0]));
         comboQ3 = new JComboBox<>(questions.toArray(new String[0]));
-        champR1 = new JTextField();
-        champR2 = new JTextField();
-        champR3 = new JTextField();
-
-        centre.add(new JLabel("Nom :"));
-        centre.add(champNom);
-        centre.add(new JLabel("Prénom :"));
-        centre.add(champPrenom);
-        centre.add(new JLabel("Email :"));
-        centre.add(champEmail);
-        centre.add(new JLabel("Mot de passe :"));
-        centre.add(champMotDePasse);
-        centre.add(new JLabel("Confirmation MDP :"));
-        centre.add(champConfirmation);
-        centre.add(new JLabel(""));
-        centre.add(checkBoxFidele);
-        centre.add(new JLabel(""));
-        centre.add(checkBoxAdmin);
-
-        centre.add(new JLabel("Question 1 :"));
-        centre.add(comboQ1);
-        centre.add(new JLabel("Réponse 1 :"));
-        centre.add(champR1);
-        centre.add(new JLabel("Question 2 :"));
-        centre.add(comboQ2);
-        centre.add(new JLabel("Réponse 2 :"));
-        centre.add(champR2);
-        centre.add(new JLabel("Question 3 :"));
-        centre.add(comboQ3);
-        centre.add(new JLabel("Réponse 3 :"));
-        centre.add(champR3);
+        champR1 = new JTextField(20);
+        champR2 = new JTextField(20);
+        champR3 = new JTextField(20);
 
         boutonInscription = new JButton("Créer mon compte");
+        boutonAccueil = new JButton("🏠 Accueil");
+        boutonRetour = new JButton("⬅ Retour");
         StyleUI.styliserBouton(boutonInscription);
-        centre.add(new JLabel(""));
-        centre.add(boutonInscription);
+        StyleUI.styliserBouton(boutonAccueil);
+        StyleUI.styliserBouton(boutonRetour);
+
+        gbc.insets = new Insets(8, 8, 8, 8);
+        gbc.gridx = 0; gbc.gridy = 0; gbc.gridwidth = 2;
+        centre.add(titre, gbc);
+
+        gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Nom :"), gbc);
+        gbc.gridx = 1;
+        centre.add(champNom, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Prénom :"), gbc);
+        gbc.gridx = 1;
+        centre.add(champPrenom, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Email :"), gbc);
+        gbc.gridx = 1;
+        centre.add(champEmail, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Mot de passe :"), gbc);
+        gbc.gridx = 1;
+        centre.add(champMotDePasse, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Confirmation MDP :"), gbc);
+        gbc.gridx = 1;
+        centre.add(champConfirmation, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(checkBoxFidele, gbc);
+        gbc.gridx = 1;
+        centre.add(checkBoxAdmin, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Question 1 :"), gbc);
+        gbc.gridx = 1;
+        centre.add(comboQ1, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Réponse 1 :"), gbc);
+        gbc.gridx = 1;
+        centre.add(champR1, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Question 2 :"), gbc);
+        gbc.gridx = 1;
+        centre.add(comboQ2, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Réponse 2 :"), gbc);
+        gbc.gridx = 1;
+        centre.add(champR2, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Question 3 :"), gbc);
+        gbc.gridx = 1;
+        centre.add(comboQ3, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        centre.add(new JLabel("Réponse 3 :"), gbc);
+        gbc.gridx = 1;
+        centre.add(champR3, gbc);
+
+        gbc.gridx = 0; gbc.gridy++;
+        gbc.gridwidth = 2;
+        centre.add(boutonInscription, gbc);
 
         add(centre, BorderLayout.CENTER);
 
         JPanel bas = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        boutonAccueil = new JButton("🏠 Accueil");
-        boutonRetour = new JButton("⬅ Retour");
-        StyleUI.styliserBouton(boutonAccueil);
-        StyleUI.styliserBouton(boutonRetour);
         bas.add(boutonRetour);
         bas.add(boutonAccueil);
         add(bas, BorderLayout.SOUTH);
@@ -153,7 +193,6 @@ public class VueInscription extends JPanel {
 
         Utilisateur utilisateur = new Utilisateur(0, nom, prenom, email, mdp, admin, fidele);
         if (dao.ajouterUtilisateur(utilisateur)) {
-            // ✅ Construction de la Map des questions/réponses
             Map<String, String> questionsReponses = new HashMap<>();
             questionsReponses.put("question1", q1);
             questionsReponses.put("reponse1", r1);
@@ -162,7 +201,6 @@ public class VueInscription extends JPanel {
             questionsReponses.put("question3", q3);
             questionsReponses.put("reponse3", r3);
 
-            // ✅ Enregistrement des questions
             QuestionSecuriteDAO daoQ = new QuestionSecuriteDAO();
             daoQ.enregistrerQuestions(utilisateur.getEmail(), questionsReponses);
 

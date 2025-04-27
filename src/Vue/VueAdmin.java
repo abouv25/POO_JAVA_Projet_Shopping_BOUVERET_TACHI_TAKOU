@@ -52,7 +52,7 @@ public class VueAdmin extends JPanel {
                         int stock = Integer.parseInt(model.getValueAt(row, 3).toString());
 
                         Produit produit = new Produit(id, nom, prix, stock);
-                        new VueDetailProduit(produit,false).setVisible(true);
+                        new VueDetailProduit(mainWindow,produit,false).setVisible(true);
                     }
                 }
             }

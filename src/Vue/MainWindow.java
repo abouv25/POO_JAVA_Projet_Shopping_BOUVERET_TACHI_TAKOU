@@ -15,14 +15,12 @@ public class MainWindow extends JFrame {
     private JPanel mainPanel;
     private Utilisateur utilisateurConnecte;
     private Panier panier = new Panier();
-
     private Map<String, JPanel> vues = new HashMap<>();
-    // Historique des vues pour le bouton « page précédente »
     private Stack<String> historiqueVues = new Stack<>();
     private String vueActuelle;
 
     public MainWindow() {
-        setTitle("Application Shopping");
+        setTitle("Application BTT Shopping");
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(800, 600);
         setLocationRelativeTo(null);
@@ -35,10 +33,9 @@ public class MainWindow extends JFrame {
         ajouterVue("accueil", new VueAccueil(this));
         ajouterVue("panier", new VuePanier(this));
         ajouterVue("inscription", new VueInscription(this));
-        ajouterVue("accueilClient", new VueAccueil(this));
         ajouterVue("accueilAdmin", new VueAccueilAdmin(this));
         ajouterVue("historique", new VueHistoriqueCommandes(this));
-        ajouterVue("stats", new VueStatistiques(this));
+        ajouterVue("statistiques", new VueStatistiques(this)); // ✅ renommé pour correspondre
         ajouterVue("motdepasseoublie", new VueMotDePasseOublie(this));
 
         // Préchargement du catalogue
@@ -48,23 +45,16 @@ public class MainWindow extends JFrame {
         setContentPane(mainPanel);
         switchTo("accueil");
 
+
         setVisible(true);
     }
 
-    public void chargerVueGestionUtilisateurs() {
-        if (!vues.containsKey("gestionUtilisateurs")) {
-            VueGestionUtilisateurs vue = new VueGestionUtilisateurs(this);
-            ajouterVue("gestionUtilisateurs", vue);
-        }
-    }
-
-    // Ajouter une vue dynamiquement
+    // --- Fonctions principales ---
     public void ajouterVue(String nom, JPanel vue) {
         mainPanel.add(vue, nom);
         vues.put(nom, vue);
     }
 
-    // Supprimer une vue existante
     public void supprimerVue(String nom) {
         Component comp = vues.get(nom);
         if (comp != null) {
@@ -73,7 +63,6 @@ public class MainWindow extends JFrame {
         }
     }
 
-    // Naviguer vers une vue
     public void switchTo(String viewName) {
         if (!vues.containsKey(viewName)) {
             System.err.println("Vue inconnue : " + viewName);
@@ -86,22 +75,20 @@ public class MainWindow extends JFrame {
         vueActuelle = viewName;
         cardLayout.show(mainPanel, viewName);
 
+        // 🔄 Mise à jour dynamique de certaines vues
         if ("accueil".equals(viewName)) {
             VueAccueil accueil = (VueAccueil) vues.get("accueil");
             accueil.mettreAJourAffichage();
         }
-
         if ("panier".equals(viewName)) {
-            VuePanier vp = (VuePanier) vues.get("panier");
-            vp.rafraichir();
+            VuePanier panierView = (VuePanier) vues.get("panier");
+            panierView.rafraichir();
         }
-
         if ("catalogue".equals(viewName)) {
-            chargerCatalogue();
+            chargerCatalogue(); // Recharge sécurisé
         }
     }
 
-    /** Passe à la vue précédente, si elle existe dans l’historique */
     public void retourPagePrecedente() {
         if (!historiqueVues.isEmpty()) {
             String precedente = historiqueVues.pop();
@@ -110,23 +97,24 @@ public class MainWindow extends JFrame {
         }
     }
 
+    // --- Accesseurs ---
     public Panier getPanier() {
         return panier;
-    }
-
-    public void setUtilisateurConnecte(Utilisateur utilisateur) {
-        this.utilisateurConnecte = utilisateur;
     }
 
     public Utilisateur getUtilisateurConnecte() {
         return utilisateurConnecte;
     }
 
+    public void setUtilisateurConnecte(Utilisateur utilisateur) {
+        this.utilisateurConnecte = utilisateur;
+    }
+
     public Map<String, JPanel> getVues() {
         return vues;
     }
 
-    // Chargement sécurisé et dynamique du catalogue
+    // --- Chargement dynamique sécurisé ---
     public void chargerCatalogue() {
         if (!vues.containsKey("catalogue")) {
             VueProduits vueProduits = new VueProduits(this, utilisateurConnecte);
@@ -134,11 +122,24 @@ public class MainWindow extends JFrame {
         }
     }
 
-    // Chargement sécurisé de la vue admin
     public void chargerVueAdmin() {
         if (!vues.containsKey("admin")) {
             VueAdmin adminView = new VueAdmin(this);
             ajouterVue("admin", adminView);
+        }
+    }
+
+    public void chargerVueGestionUtilisateurs() {
+        if (!vues.containsKey("gestionUtilisateurs")) {
+            VueGestionUtilisateurs vue = new VueGestionUtilisateurs(this);
+            ajouterVue("gestionUtilisateurs", vue);
+        }
+    }
+
+    public void chargerVueReductions() {
+        if (!vues.containsKey("reductions")) {
+            VueGestionReductions vue = new VueGestionReductions(this);
+            ajouterVue("reductions", vue);
         }
     }
 }

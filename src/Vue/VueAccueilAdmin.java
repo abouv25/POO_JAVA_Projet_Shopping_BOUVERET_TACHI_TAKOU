@@ -7,19 +7,20 @@ import java.awt.*;
 
 public class VueAccueilAdmin extends JPanel {
 
-    private MainWindow mainWindow;
-    private JLabel titreLabel;
-    private JButton boutonProduits;
-    private JButton boutonReductions;
-    private JButton boutonStats;
-    private JButton boutonDeconnexion;
+    private final MainWindow mainWindow;
+    private final JLabel titreLabel;
+    private final JButton boutonProduits;
+    private final JButton boutonReductions;
+    private final JButton boutonStats;
+    private final JButton boutonDeconnexion;
 
     public VueAccueilAdmin(MainWindow mainWindow) {
         this.mainWindow = mainWindow;
         setLayout(new BorderLayout());
+        StyleUI.appliquerFondEtCadre(this); // ✅ Fond blanc + cadre noir
 
         // --- Logo centré en haut ---
-        ImageIcon logo = new ImageIcon(getClass().getResource("logoBTTShopping.png"));
+        ImageIcon logo = new ImageIcon(getClass().getResource("/Vue/logoBTTShopping.png")); // ✅ Bon chemin relatif
         Image img = logo.getImage().getScaledInstance(100, 100, Image.SCALE_SMOOTH);
         JLabel logoLabel = new JLabel(new ImageIcon(img));
         logoLabel.setHorizontalAlignment(SwingConstants.CENTER);
@@ -29,10 +30,11 @@ public class VueAccueilAdmin extends JPanel {
         JPanel centre = new JPanel();
         centre.setLayout(new BoxLayout(centre, BoxLayout.Y_AXIS));
         centre.setBorder(BorderFactory.createEmptyBorder(30, 80, 30, 80));
+        StyleUI.appliquerFondEtCadre(centre);
 
-        titreLabel = new JLabel("Espace Administrateur", SwingConstants.CENTER);
+        titreLabel = new JLabel("👨‍💼 Espace Administrateur", SwingConstants.CENTER);
         titreLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        titreLabel.setFont(new Font("SansSerif", Font.BOLD, 18));
+        titreLabel.setFont(new Font("SansSerif", Font.BOLD, 20));
         centre.add(titreLabel);
         centre.add(Box.createRigidArea(new Dimension(0, 20)));
 
@@ -44,6 +46,7 @@ public class VueAccueilAdmin extends JPanel {
         for (JButton btn : new JButton[]{boutonProduits, boutonReductions, boutonStats, boutonDeconnexion}) {
             btn.setAlignmentX(Component.CENTER_ALIGNMENT);
             btn.setMaximumSize(new Dimension(250, 40));
+            StyleUI.styliserBouton(btn); // ✅ Uniformisation des boutons
             centre.add(btn);
             centre.add(Box.createRigidArea(new Dimension(0, 10)));
         }
@@ -57,11 +60,15 @@ public class VueAccueilAdmin extends JPanel {
         });
 
         boutonReductions.addActionListener(e -> {
-            JOptionPane.showMessageDialog(mainWindow, "La gestion des réductions arrive bientôt !");
+            if (!mainWindow.getVues().containsKey("reductions")) {
+                VueGestionReductions vue = new VueGestionReductions(mainWindow);
+                mainWindow.ajouterVue("reductions", vue);
+            }
+            mainWindow.switchTo("reductions");
         });
 
         boutonStats.addActionListener(e -> {
-            mainWindow.switchTo("stats"); // La vue sera créée ensuite
+            mainWindow.switchTo("statistiques");
         });
 
         boutonDeconnexion.addActionListener(e -> {

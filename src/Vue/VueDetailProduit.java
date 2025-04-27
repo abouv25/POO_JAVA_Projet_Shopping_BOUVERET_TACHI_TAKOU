@@ -17,24 +17,28 @@ public class VueDetailProduit extends JFrame {
     private Produit produit;
     private boolean consultationSeulement;
 
-
-
-    public VueDetailProduit(Produit produit, boolean consultationSeulement) {
+    public VueDetailProduit(MainWindow mainWindow, Produit produit, boolean consultationSeulement) {
         this.produit = produit;
         this.consultationSeulement = consultationSeulement;
 
         setTitle("📝 Détail du produit : " + produit.getNom());
-        setSize(500, 500);
+        setSize(500, 600);
         setLocationRelativeTo(null);
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         setLayout(new BorderLayout());
+        StyleUI.appliquerFondEtCadre((JComponent) getContentPane());
+
+
 
         // ✅ Barre supérieure (logo + utilisateur)
-        add(ComposantsUI.creerBarreSuperieure(null), BorderLayout.NORTH);
+        if (mainWindow != null) {
+            add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
+        }
 
         // 🖼️ Panel image
         JPanel imagePanel = new JPanel();
         imagePanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        StyleUI.appliquerFondEtCadre(imagePanel);
 
         if (produit.getImage() != null && !produit.getImage().isBlank()) {
             File imageFile = new File(produit.getImage());
@@ -55,6 +59,7 @@ public class VueDetailProduit extends JFrame {
         // 📝 Formulaire
         JPanel form = new JPanel(new GridLayout(4, 2, 10, 10));
         form.setBorder(BorderFactory.createEmptyBorder(10, 30, 10, 30));
+        StyleUI.appliquerFondEtCadre(form);
 
         champNom = new JTextField(produit.getNom());
         champPrix = new JTextField(String.valueOf(produit.getPrix()));
@@ -75,18 +80,23 @@ public class VueDetailProduit extends JFrame {
 
         add(form, BorderLayout.CENTER);
 
-        // 🔘 Bas
-        JPanel bas = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        // 🔘 Bas de page
+        JPanel bas = new JPanel(new FlowLayout(FlowLayout.CENTER, 15, 10));
+        StyleUI.appliquerFondEtCadre(bas);
+
         boutonRetour = new JButton("⬅ Retour");
+        StyleUI.styliserBouton(boutonRetour);
         bas.add(boutonRetour);
+
+        boutonRetour.addActionListener(e -> dispose());
 
         if (!consultationSeulement) {
             boutonEnregistrer = new JButton("💾 Enregistrer");
+            StyleUI.styliserBouton(boutonEnregistrer);
             bas.add(boutonEnregistrer);
+
             boutonEnregistrer.addActionListener(e -> enregistrerModifications());
         }
-
-        boutonRetour.addActionListener(e -> dispose());
 
         add(bas, BorderLayout.SOUTH);
     }
