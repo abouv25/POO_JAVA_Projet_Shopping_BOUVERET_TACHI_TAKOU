@@ -32,14 +32,13 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
     private int pageActuelle = 1;
     private int lignesParPage = 10;
     private List<Facture> facturesGlobales;
-
     private List<Facture> facturesFiltrees;
 
     public VueHistoriqueCommandesAdmin(MainWindow mainWindow) {
         setLayout(new BorderLayout());
         StyleUI.appliquerFondEtCadre(this);
 
-        JLabel titre = new JLabel("\uD83D\uDCCA Historique global des commandes", SwingConstants.CENTER);
+        JLabel titre = new JLabel("📊 Historique global des commandes", SwingConstants.CENTER);
         StyleUI.styliserTitre(titre);
         add(titre, BorderLayout.NORTH);
 
@@ -54,9 +53,9 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
                 double total = Double.parseDouble(getValueAt(row, 3).toString().replace(" €", ""));
                 double remise = Double.parseDouble(getValueAt(row, 4).toString().replace(" €", ""));
                 if (remise > 0) {
-                    c.setBackground(new Color(204, 229, 255)); // bleu clair
+                    c.setBackground(new Color(204, 229, 255));
                 } else if (total > 100) {
-                    c.setBackground(new Color(204, 255, 204)); // vert clair
+                    c.setBackground(new Color(204, 255, 204));
                 } else {
                     c.setBackground(Color.WHITE);
                 }
@@ -69,6 +68,33 @@ public class VueHistoriqueCommandesAdmin extends JPanel {
         table.setRowSorter(sorter);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
+        // 🔵 Barre de navigation (pagination)
+        JPanel panelNavigation = new JPanel(new FlowLayout(FlowLayout.CENTER));
+        StyleUI.appliquerFondEtCadre(panelNavigation);
+        labelPage = new JLabel();
+        JButton boutonPrecedent = new JButton("⬅ Page précédente");
+        JButton boutonSuivant = new JButton("Page suivante ➡");
+
+        boutonPrecedent.addActionListener(e -> {
+            if (pageActuelle > 1) {
+                pageActuelle--;
+                chargerFactures();
+            }
+        });
+        boutonSuivant.addActionListener(e -> {
+            int totalPages = (int) Math.ceil((double) facturesFiltrees.size() / lignesParPage);
+            if (pageActuelle < totalPages) {
+                pageActuelle++;
+                chargerFactures();
+            }
+        });
+
+        panelNavigation.add(boutonPrecedent);
+        panelNavigation.add(labelPage);
+        panelNavigation.add(boutonSuivant);
+        add(panelNavigation, BorderLayout.NORTH);
+
+        // 🔵 Panneau de filtres
         JPanel panelFiltres = new JPanel(new FlowLayout(FlowLayout.LEFT));
         StyleUI.appliquerFondEtCadre(panelFiltres);
 

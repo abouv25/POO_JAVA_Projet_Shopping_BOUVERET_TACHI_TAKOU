@@ -101,26 +101,27 @@ public class VuePaiement extends JPanel {
             return;
         }
 
-        // ✅ Créer une facture
+        // ✅ Créer et enregistrer la facture
         Facture facture = new Facture(u, panier.getLignes());
         facture.calculerMontantTotal();
 
-        // ✅ Enregistrer la facture en base
         FactureDAO dao = new FactureDAO();
         int idFacture = dao.ajouterFacture(facture);
-        if (idFacture > 0) {
-            facture.setId(idFacture);
+
+        if (idFacture == -1) {
+            JOptionPane.showMessageDialog(this, "❌ Échec lors de la génération de la facture.");
+            return;
         }
 
-        // ✅ Vider le panier
+        facture.setId(idFacture);
         panier.viderPanier();
 
-        // ✅ Message succès
-        JOptionPane.showMessageDialog(this, "💳 Paiement validé et facture générée !");
+        JOptionPane.showMessageDialog(this, "💳 Paiement validé. Merci pour votre commande !");
 
-        // ✅ Afficher VueDetailFacture (et plus VueNouvelleFacture)
-        VueDetailFacture vueFacture = new VueDetailFacture(idFacture, u, mainWindow);
-        mainWindow.ajouterVue("facture_" + idFacture, vueFacture);
-        mainWindow.switchTo("facture_" + idFacture);
+        // ✅ Affichage via méthode dédiée
+        mainWindow.chargerVueDetailFacture(idFacture, u);
     }
+
+
+
 }

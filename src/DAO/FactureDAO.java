@@ -9,8 +9,8 @@ import java.util.*;
 public class FactureDAO {
 
     public int ajouterFacture(Facture f) {
-        String sqlFacture = "INSERT INTO facture (id_utilisateur, date_facture, montant_total) VALUES (?, ?, ?)";
-        String sqlLigneFacture = "INSERT INTO ligne_facture (id_facture, id_produit, quantite, prix_unitaire) VALUES (?, ?, ?, ?)";
+        String sqlFacture = "INSERT INTO facture (utilisateur_id, date_facture, montant_total) VALUES (?, ?, ?)";
+        String sqlLigneFacture = "INSERT INTO ligne_facture (facture_id, produit_id, quantite, prix_unitaire) VALUES (?, ?, ?, ?)";
         int idFacture = -1;
 
         try (Connection conn = ConnexionBD.getConnection()) {
@@ -27,6 +27,11 @@ public class FactureDAO {
                     idFacture = generatedKeys.getInt(1);
                     f.setId(idFacture);
 
+                    // ✅ Sécurité : on vérifie que les lignes sont bien présentes
+                    if (f.getLignes() == null || f.getLignes().isEmpty()) {
+                        throw new SQLException("La facture n’a pas de lignes à insérer.");
+                    }
+
                     try (PreparedStatement stmtLigne = conn.prepareStatement(sqlLigneFacture)) {
                         for (LignePanier ligne : f.getLignes()) {
                             stmtLigne.setInt(1, idFacture);
@@ -37,27 +42,32 @@ public class FactureDAO {
                         }
                         stmtLigne.executeBatch();
                     }
+                } else {
+                    throw new SQLException("Aucune clé générée pour la facture.");
                 }
 
                 conn.commit();
+                System.out.println("✅ Facture insérée avec succès : ID = " + idFacture);
+
             } catch (SQLException e) {
                 conn.rollback();
-                System.err.println("Erreur lors de l'ajout de facture : " + e.getMessage());
+                System.err.println("❌ Erreur lors de l'ajout de facture : " + e.getMessage());
+                e.printStackTrace();
                 idFacture = -1;
             }
 
         } catch (SQLException e) {
-            System.err.println("Erreur de connexion : " + e.getMessage());
+            System.err.println("❌ Erreur de connexion à la BDD : " + e.getMessage());
+            e.printStackTrace();
             idFacture = -1;
         }
 
         return idFacture;
     }
 
-
     public List<Facture> listerFacturesPourUtilisateur(Utilisateur u) {
         List<Facture> factures = new ArrayList<>();
-        String sql = "SELECT * FROM facture WHERE utilisateur_id = ? ORDER BY date_facture DESC";
+        String sql = "SELECT * FROM facture WHERE utilisateur_id = ? ORDER BY date_facture DESC";  // ✅ colonne corrigée
 
         try (Connection conn = ConnexionBD.getConnection();
              PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -76,7 +86,8 @@ public class FactureDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Erreur récupération factures : " + e.getMessage());
+            System.err.println("❌ Erreur récupération factures utilisateur : " + e.getMessage());
+            e.printStackTrace();
         }
 
         return factures;
@@ -87,8 +98,8 @@ public class FactureDAO {
         String sql = """
             SELECT p.id, p.nom, p.prix, lf.quantite
             FROM ligne_facture lf
-            JOIN produit p ON p.id = lf.id_produit
-            WHERE lf.id_facture = ?
+            JOIN produit p ON p.id = lf.produit_id
+            WHERE lf.facture_id = ?
         """;
 
         try (Connection conn = ConnexionBD.getConnection();
@@ -107,7 +118,8 @@ public class FactureDAO {
             }
 
         } catch (SQLException e) {
-            System.err.println("Erreur récupération lignes facture : " + e.getMessage());
+            System.err.println("❌ Erreur récupération lignes facture : " + e.getMessage());
+            e.printStackTrace();
         }
 
         return lignes;
@@ -168,7 +180,7 @@ public class FactureDAO {
         String sql = """
             SELECT u.nom, SUM(f.montant_total) AS totalVentes
             FROM facture f
-            JOIN utilisateur u ON f.id_utilisateur = u.id
+            JOIN utilisateur u ON f.utilisateur_id = u.id
             WHERE YEAR(f.date_facture) = ? AND MONTH(f.date_facture) = ?
             GROUP BY u.nom ORDER BY totalVentes DESC
         """;
@@ -196,7 +208,7 @@ public class FactureDAO {
         String sql = """
         SELECT f.*, u.nom, u.email, u.is_admin, u.is_fidele
         FROM facture f
-        JOIN utilisateur u ON f.id_utilisateur = u.id
+        JOIN utilisateur u ON f.utilisateur_id = u.id
         ORDER BY f.date_facture DESC
     """;
 
@@ -234,8 +246,8 @@ public class FactureDAO {
         String sql = """
             SELECT p.nom, SUM(lf.quantite * lf.prix_unitaire) AS totalVente
             FROM ligne_facture lf
-            JOIN produit p ON p.id = lf.id_produit
-            JOIN facture f ON f.id = lf.id_facture
+            JOIN produit p ON p.id = lf.produit_id
+            JOIN facture f ON f.id = lf.facture_id
             WHERE YEAR(f.date_facture) = ? AND MONTH(f.date_facture) = ?
             GROUP BY p.nom ORDER BY totalVente DESC
         """;

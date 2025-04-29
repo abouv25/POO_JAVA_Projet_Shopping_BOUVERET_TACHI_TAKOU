@@ -184,7 +184,22 @@ public class VuePanier extends JPanel {
     }
 
     private void validerCommande(ActionEvent e) {
-        // ✅ (Ton code de validation de commande est très bien.)
-        // ✅ Tu peux l'utiliser tel quel, il est très propre aussi !
+        Utilisateur u = mainWindow.getUtilisateurConnecte();
+        if (u == null) {
+            JOptionPane.showMessageDialog(this, "Vous devez être connecté pour valider la commande.");
+            mainWindow.switchTo("connexion");
+            return;
+        }
+
+        if (mainWindow.getPanier().estVide()) {
+            JOptionPane.showMessageDialog(this, "Votre panier est vide !");
+            return;
+        }
+
+        // Redirection vers la vue Paiement
+        mainWindow.switchTo("paiement");
     }
+
+
+
 }

@@ -171,10 +171,9 @@ public class MainWindow extends JFrame {
     }
 
     public void chargerVueHistoriqueFactures() {
-        if (!vues.containsKey("historiqueFactures")) {
-            VueHistoriqueFactures vue = new VueHistoriqueFactures(utilisateurConnecte, this);
-            ajouterVue("historiqueFactures", vue);
-        }
+        supprimerVue("historiqueFactures");
+        VueHistoriqueFactures vue = new VueHistoriqueFactures(utilisateurConnecte, this);
+        ajouterVue("historiqueFactures", vue);
         switchTo("historiqueFactures");
     }
 }

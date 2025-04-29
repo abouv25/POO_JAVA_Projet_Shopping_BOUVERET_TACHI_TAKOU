@@ -9,7 +9,6 @@ import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
-import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -74,20 +73,50 @@ public class VueHistoriqueFactures extends JPanel {
         checkBox2025.addActionListener(e -> rechargerFactures());
         triComboBox.addActionListener(e -> rechargerFactures());
 
+        // ✅ Chargement initial
         rechargerFactures();
     }
 
     private void rechargerFactures() {
+        removeAll();
+        setLayout(new BorderLayout());
+
+        add(ComposantsUI.creerBarreSuperieure(mainWindow), BorderLayout.NORTH);
+
+        JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        checkBox2025 = new JCheckBox("Afficher uniquement 2025");
+        triComboBox = new JComboBox<>(new String[]{
+                "Aucun tri", "Tri par Montant croissant", "Tri par Date décroissante"
+        });
+        topPanel.add(checkBox2025);
+        topPanel.add(triComboBox);
+        add(topPanel, BorderLayout.NORTH);
+
+        JPanel bas = new JPanel(new BorderLayout());
+        boutonRetour = new JButton("⬅️ Page précédente");
+        boutonVoirDetail = new JButton("Voir les détails");
+        boutonRetour.addActionListener(e -> mainWindow.retourPagePrecedente());
+        boutonVoirDetail.addActionListener(e -> ouvrirDetail());
+        bas.add(boutonRetour, BorderLayout.WEST);
+        bas.add(boutonVoirDetail, BorderLayout.EAST);
+        add(bas, BorderLayout.SOUTH);
+
+        dao = new FactureDAO();
+
+        if (utilisateur == null) {
+            add(new JLabel("Erreur : utilisateur non connecté", SwingConstants.CENTER), BorderLayout.CENTER);
+            revalidate(); repaint();
+            return;
+        }
+
         List<Facture> factures = dao.listerFacturesPourUtilisateur(utilisateur);
 
-        // ✅ Filtre 2025
         if (checkBox2025.isSelected()) {
             factures = factures.stream()
                     .filter(f -> f.getDate().getYear() == 2025)
                     .collect(Collectors.toList());
         }
 
-        // ✅ Tri
         String triChoisi = (String) triComboBox.getSelectedItem();
         if (triChoisi != null) {
             switch (triChoisi) {
@@ -100,14 +129,26 @@ public class VueHistoriqueFactures extends JPanel {
             }
         }
 
-        chargerFacturesDansTableau(factures);
-    }
+        if (factures.isEmpty()) {
+            add(new JLabel("Aucune facture trouvée.", SwingConstants.CENTER), BorderLayout.CENTER);
+        } else {
+            tableFactures = new JTable();
+            chargerFacturesDansTableau(factures);
+            tableFactures.addMouseListener(new MouseAdapter() {
+                public void mouseClicked(MouseEvent e) {
+                    if (e.getClickCount() == 2) ouvrirDetail();
+                }
+            });
+            add(new JScrollPane(tableFactures), BorderLayout.CENTER);
+        }
 
+        revalidate();
+        repaint();
+    }
 
     private void chargerFacturesDansTableau(List<Facture> factures) {
         DefaultTableModel model = new DefaultTableModel(
                 new Object[]{"ID", "Date", "Montant Total (€)", "Remise (%)"}, 0);
-
         for (Facture f : factures) {
             model.addRow(new Object[]{
                     f.getId(),
@@ -116,7 +157,6 @@ public class VueHistoriqueFactures extends JPanel {
                     String.format("%.0f", f.getRemisePourcent())
             });
         }
-
         tableFactures.setModel(model);
     }
 
@@ -126,11 +166,7 @@ public class VueHistoriqueFactures extends JPanel {
             JOptionPane.showMessageDialog(this, "Sélectionnez une facture.");
             return;
         }
-
         int idFacture = (int) tableFactures.getValueAt(row, 0);
-
-        VueDetailFacture vueDetail = new VueDetailFacture(idFacture, utilisateur, mainWindow);
-        mainWindow.ajouterVue("detailFacture", vueDetail);
-        mainWindow.switchTo("detailFacture");
+        mainWindow.chargerVueDetailFacture(idFacture, utilisateur);
     }
 }
