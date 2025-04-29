@@ -172,6 +172,8 @@ public class VuePanier extends JPanel {
         double remise = (u != null && u.isClientFidele()) ? sousTotal * 0.1 : 0.0;
         double total = sousTotal - remise;
 
+
+
         labelResume.setText(
                 "<html><div style='text-align:center'>"
                         + "Sous-total : " + String.format("%.2f", sousTotal) + " €<br>"
@@ -198,7 +200,8 @@ public class VuePanier extends JPanel {
 
         // Redirection vers la vue Paiement
         mainWindow.switchTo("paiement");
-    }
+        //erreur vue pendant soutenance : le bouton valider commande ne marche pas. Il attend un action listener qui ne lui renvoie rien car il n'est pas codé dans la methode
+    }//dans la declaration du listener à la volée.
 
 
 
